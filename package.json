@@ -1,0 +1,23 @@
+{
+  "name": "cqin-cli",
+  "version": "1.0.0",
+  "type": "module",
+  "bin": {
+    "cqin-cli": "./bin/cli.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Your Name",
+  "license": "MIT",
+  "description": "A CLI tool for managing your project",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "ejs": "^3.1.10",
+    "fs-extra": "^11.3.0",
+    "inquirer": "^12.5.2",
+    "ora": "^8.2.0"
+  }
+}
