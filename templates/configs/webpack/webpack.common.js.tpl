@@ -1,12 +1,12 @@
-const path = require('path');
-<% if (framework === 'Vue') { %>
-const { VueLoaderPlugin } = require('vue-loader');
-<% } %>
-// ESM环境获取__dirname
+import path from 'path';
 import { fileURLToPath } from 'url';
+<% if (framework === 'Vue') { %>
+import { VueLoaderPlugin } from 'vue-loader';
+<% } %>
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-module.exports = {
+export default {
   entry: './src/main.<%= ext %>',
   output: {
     filename: 'bundle.js',
@@ -30,7 +30,23 @@ module.exports = {
       {
         test: /\.css$/,
         use: ['style-loader', 'css-loader']
-      }
+      },
+      <% } %>
+      <% if (cssPreprocessor !== 'CSS') { %>
+      {
+        test: /\.<%= styleExt %>$/,
+        use: [
+          'style-loader',
+          'css-loader',
+          <% if (cssPreprocessor === 'Sass/SCSS') { %>
+          'sass-loader'
+          <% } else if (cssPreprocessor === 'Less') { %>
+          'less-loader'
+          <% } else if (cssPreprocessor === 'Stylus') { %>
+          'stylus-loader'
+          <% } %>
+        ]
+      },
       <% } %>
     ]
   },

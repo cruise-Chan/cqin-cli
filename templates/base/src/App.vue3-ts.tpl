@@ -19,4 +19,13 @@ const count = ref<number>(0)
 .app {
   color: #42b983;
 }
+.greeting {
+  <% if (cssPreprocessor === 'Sass/SCSS') { %>
+  &-text {
+    color: blue;
+  }
+  <% } else { %>
+  color: red;
+  <% } %>
+}
 </style>

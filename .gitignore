@@ -17,3 +17,12 @@ build/
 # 忽略 IDE 或编辑器生成的文件
 .DS_Store
 *.swp
+
+# .eslintignore
+dist/
+public/
+*.config.js
+
+# .stylelintignore
+dist/
+public/

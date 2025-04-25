@@ -17,19 +17,32 @@ program
   .arguments('<project-name>')
   .action(async (projectName) => {
     const spinner = ora().start('正在初始化项目...');
-    
+
     try {
       // 1. 用户交互提问
       const answers = await inquirer.prompt([
         { type: 'list', name: 'framework', message: '选择框架:', choices: ['React', 'Vue'] },
-        { 
-          type: 'list', 
-          name: 'version', 
-          message: '版本:', 
-          choices: (prev) => prev.framework === 'Vue' ? ['3.x', '2.x'] : ['17.x', '18.x'] 
+        {
+          type: 'list',
+          name: 'version',
+          message: '版本:',
+          choices: (prev) => prev.framework === 'Vue' ? ['3.x', '2.x'] : ['17.x', '18.x']
         },
         { type: 'list', name: 'language', message: '语言:', choices: ['TypeScript', 'JavaScript'] },
-        { type: 'list', name: 'builder', message: '构建工具:', choices: ['Vite', 'Webpack' ] }
+        { type: 'list', name: 'builder', message: '构建工具:', choices: ['Vite', 'Webpack'] },
+        {
+          type: 'confirm',
+          name: 'needLint',
+          message: '是否集成代码规范(ESLint+Prettier+Stylelint)?',
+          default: true
+        },
+        {
+          type: 'list',
+          name: 'cssPreprocessor',
+          message: '选择 CSS 预处理器:',
+          choices: ['Sass/SCSS', 'Less', 'Stylus', 'CSS'],
+          default: 'Sass/SCSS'
+        },
       ]);
 
       // 2. 确定文件扩展名
@@ -66,38 +79,67 @@ program
       fs.writeFileSync(path.join(srcDir, `main.${mainExt}`), mainContent);
 
       // 处理组件文件
-      spinner.text = '处理组件文件...';
       let appPath;
+      // 新增：准备样式相关参数
+      const styleExtMap = {
+        'Sass/SCSS': 'scss',
+        'Less': 'less',
+        'Stylus': 'styl',
+        'CSS': 'css'
+      };
+      const styleExt = styleExtMap[answers.cssPreprocessor];
+      const styleLang = answers.cssPreprocessor === 'Sass/SCSS'
+        ? 'scss'
+        : answers.cssPreprocessor.toLowerCase();
+
       if (answers.framework === 'Vue' && answers.version === '3.x' && answers.language === 'TypeScript') {
-        appPath = path.join(__dirname, `../templates/base/src/App.vue3-ts.tpl`); 
-      }else if (answers.framework === 'Vue' && answers.version === '3.x' && answers.language === 'JavaScript') {
+        appPath = path.join(__dirname, `../templates/base/src/App.vue3-ts.tpl`);
+      } else if (answers.framework === 'Vue' && answers.version === '3.x' && answers.language === 'JavaScript') {
         appPath = path.join(__dirname, `../templates/base/src/App.vue3.tpl`);
-      }else {
+      } else {
         path.join(__dirname, `../templates/base/src/App.${appExt}.tpl`)
       }
       const appContent = renderTemplate(
         appPath,
-        { 
+        {
           framework: answers.framework,
           msg: answers.framework === 'React' ? 'Hello React!' : 'Hello Vue!',
-          language: answers.language
+          language: answers.language,
+          cssPreprocessor: answers.cssPreprocessor,
+          styleLang,
+          styleExt
         }
       );
       fs.writeFileSync(path.join(srcDir, `App.${appExt}`), appContent);
 
-      spinner.text = '生成构建配置...';
+      // 新增：为 React 生成独立样式文件 --------------------------
+      if (answers.framework === 'React' && answers.cssPreprocessor !== 'CSS') {
+        const styleTemplatePath = path.join(
+          __dirname,
+          `../templates/styles/react/${answers.cssPreprocessor}.tpl`
+        );
+        
+        const styleContent = fs.readFileSync(styleTemplatePath, 'utf-8');
+        fs.writeFileSync(
+          path.join(srcDir, `App.${styleExt}`),
+          styleContent
+        );
+      }
       // 6. 生成构建配置
       const configExt = answers.language === 'TypeScript' ? 'ts' : 'js';
       const configContent = renderTemplate(
         answers.builder === 'Webpack' ? path.join(__dirname, `../templates/configs/${answers.builder.toLowerCase()}/webpack.common.js.tpl`) :
-        path.join(__dirname, `../templates/configs/${answers.builder.toLowerCase()}/vite.config.js.tpl`),
-        { 
+          path.join(__dirname, `../templates/configs/${answers.builder.toLowerCase()}/vite.config.js.tpl`),
+        {
           framework: answers.framework,
           language: answers.language,
-          ext: answers.language === 'TypeScript' ? 'ts' : 'js' 
+          ext: answers.language === 'TypeScript' ? 'ts' : 'js',
+          cssPreprocessor: answers.cssPreprocessor,
+          styleLang,
+          styleExt
         }
       );
-      fs.writeFileSync(path.join(targetPath, answers.builder === 'Webpack' ?  `webpack.common.${configExt}` :  `vite.config.${configExt}`), configContent);
+      fs.writeFileSync(path.join(targetPath, answers.builder === 'Webpack' ? `webpack.common.js` : `vite.config.${configExt}`), configContent);
 
       // 7. 生成语言配置
       if (answers.language === 'TypeScript') {
@@ -109,26 +151,37 @@ program
       }
 
       // 生成模板渲染文件index.html
-      const renderTemplateFile = (targetPath, templatePath, data) => {
+      const renderTemplateFile = (_targetPath, templatePath, data) => {
         const template = fs.readFileSync(
           path.join(__dirname, templatePath),
           'utf-8'
         );
         const content = ejs.render(template, data);
         fs.writeFileSync(
-          path.join(targetPath, path.basename(templatePath).replace('.tpl', '')),
+          path.join(_targetPath, path.basename(templatePath)),
           content
         );
+        // 如果是Vite，删除public/index.html
+        if (answers.builder === 'Vite') {
+          const deleteFilePath = path.join(path.join(_targetPath, 'public'), path.basename(templatePath));
+          console.log(deleteFilePath, '删除文件...');
+          fs.unlink(deleteFilePath, (err) => {
+            if (err) {
+              console.error('删除文件时发生错误：', err);
+              return;
+            }
+            console.log('文件删除成功！');
+          });
+        }
       };
-      spinner.text = '生成模板渲染文件...';
       renderTemplateFile(
-        path.join(targetPath, 'public'),
+        answers.builder === 'Vite' ? targetPath : path.join(targetPath, 'public'),
         '../templates/base/public/index.html',
-        { 
+        {
           projectName,
           framework: answers.framework,
           builder: answers.builder,
-          ext: answers.language === 'TypeScript' ? 'ts' : 'js' 
+          ext: answers.language === 'TypeScript' ? 'ts' : 'js'
         }
       );
 
@@ -136,6 +189,7 @@ program
       const pkg = {
         name: projectName,
         version: '1.0.0',
+        type: 'module',
         scripts: {
           dev: answers.builder === 'Vite' ? 'vite' : 'webpack serve --config webpack.dev.js',
           build: answers.builder === 'Vite' ? 'vite build' : 'webpack build --config webpack.prod.js'
@@ -143,16 +197,75 @@ program
         dependencies: getDependencies(answers),
         devDependencies: getDevDependencies(answers)
       };
+      // 在生成package.json逻辑中添加
+      if (answers.needLint) {
+        pkg.scripts = {
+          ...pkg.scripts,
+          "lint:js": "eslint --fix --ext .js,.jsx,.ts,.tsx,.vue src",
+          "lint:style": "stylelint --fix \"src/**/*.{css,scss,vue}\"",
+          "format": "prettier --write .",
+          "prepare": "husky install"
+        };
+
+        pkg["lint-staged"] = {
+          "*.{js,jsx,ts,tsx,vue}": [
+            "eslint --fix",
+            "prettier --write"
+          ],
+          "*.{css,scss}": [
+            "stylelint --fix",
+            "prettier --write"
+          ]
+        };
+      }
+
+      // 集成代码规范
+      if (answers.needLint) {
+        generateLintConfig(targetPath, answers);
+        addLintDependencies(pkg, answers);
+      }
       fs.writeFileSync(path.join(targetPath, 'package.json'), JSON.stringify(pkg, null, 2));
 
       // 9. 安装依赖
       spinner.text = '正在安装依赖...';
-      execSync('npm install', { cwd: targetPath, stdio: 'inherit' });
+      execSync('yarn install', { cwd: targetPath, stdio: 'inherit' });
+
+      // 在项目生成完成后执行
+      if (answers.needLint) {
+        // 初始化 Git 仓库（Husky 的前置条件）
+        execSync('git init', {
+          cwd: targetPath,
+          stdio: 'inherit',
+          shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/bash'
+        });
+
+        // 生成 .gitignore 文件
+        generateGitIgnore(targetPath, answers);
+
+        // 新版 Husky 初始化流程
+        execSync('npx husky init', {
+          cwd: targetPath,
+          stdio: 'inherit',
+          shell: true
+        });
+
+        // 直接写入 pre-commit 钩子（兼容所有平台）
+        const hookContent = '#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"\n\nnpx lint-staged';
+        const preCommitPath = path.join(targetPath, '.husky/pre-commit');
+        fs.writeFileSync(preCommitPath, hookContent);
+        fs.chmodSync(preCommitPath, 0o755); // 设置可执行权限
+
+        // 确保 package.json 配置正确
+        const pkgPath = path.join(targetPath, 'package.json');
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+        pkg.scripts.prepare = "husky";
+        fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+      }
 
       spinner.succeed(`
         项目创建成功！运行以下命令：
         ${chalk.cyan(`cd ${projectName}`)}
-        ${chalk.cyan('npm run dev')}
+        ${chalk.cyan('yarn dev')}
       `);
     } catch (err) {
       spinner.fail(`创建失败: ${chalk.red(err.message)}`);
@@ -199,5 +312,199 @@ function getDevDependencies(answers) {
       if (answers.version === '2.x') devDeps['vue-template-compiler'] = '^2.7.14';
     }
   }
+  // CSS 预处理器依赖
+  const preprocessorDeps = {
+    'Sass/SCSS': answers.builder === 'Vite' 
+      ? { sass: 'latest' } 
+      : { 'sass-loader': '^13.0.0', sass: 'latest' },
+    'Less': answers.builder === 'Vite' 
+      ? { less: 'latest' } 
+      : { 'less-loader': '^11.0.0', less: 'latest' },
+    'Stylus': answers.builder === 'Vite' 
+      ? { stylus: 'latest' } 
+      : { 'stylus-loader': '^7.0.0', stylus: 'latest' }
+  };
+
+  // 添加预处理器依赖
+  if (answers.cssPreprocessor !== 'CSS') {
+    Object.assign(devDeps, preprocessorDeps[answers.cssPreprocessor]);
+  }
+
   return devDeps;
+}
+
+
+// 配置代码规范集成（eslint、stylelint、prettier）
+function generateLintConfig(targetPath, answers) {
+  const { framework, language, builder } = answers;
+
+  // ESLint 配置
+  const eslintConfig = {
+    extends: [
+      'eslint:recommended',
+      framework === 'Vue' ? 'plugin:vue/vue3-recommended' : 'plugin:react/recommended',
+      'prettier'
+    ],
+    parserOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      ...(language === 'TypeScript' && {
+        parser: '@typescript-eslint/parser'
+      }),
+      ...(framework === 'Vue' && {
+        parser: 'vue-eslint-parser'
+      })
+    },
+    plugins: [
+      ...(framework === 'Vue' ? ['vue'] : ['react']),
+      ...(language === 'TypeScript' ? ['@typescript-eslint'] : [])
+    ],
+    rules: {
+      'no-console': 'warn',
+      'prefer-const': 'error'
+    },
+    env: {
+      browser: true,
+      es2021: true
+    }
+  };
+
+  fs.writeFileSync(
+    path.join(targetPath, '.eslintrc.js'),
+    `export default ${JSON.stringify(eslintConfig, null, 2)}`
+  );
+
+  // Prettier 配置
+  const prettierConfig = {
+    semi: false,
+    singleQuote: true,
+    trailingComma: 'none',
+    printWidth: 100,
+    endOfLine: 'auto'
+  };
+  fs.writeFileSync(
+    path.join(targetPath, '.prettierrc'),
+    JSON.stringify(prettierConfig, null, 2)
+  );
+
+  // Stylelint 配置
+  const stylelintConfig = {
+    extends: [
+      'stylelint-config-standard',
+      'stylelint-config-prettier',
+      answers.cssPreprocessor === 'Sass/SCSS' && 'stylelint-config-standard-scss',
+      answers.cssPreprocessor === 'Less' && 'stylelint-config-recommended-less',
+      answers.cssPreprocessor === 'Stylus' && 'stylelint-config-stylus'
+    ].filter(Boolean),
+    rules: {
+      'selector-class-pattern': null,
+      'no-descending-specificity': null
+    }
+  };
+  fs.writeFileSync(
+    path.join(targetPath, '.stylelintrc.js'),
+    `export default ${JSON.stringify(stylelintConfig, null, 2)}`
+  );
+}
+
+function addLintDependencies(pkg, answers) {
+  const lintDeps = {
+    'Sass/SCSS': ['stylelint-scss'],
+    'Less': ['stylelint-less'],
+    'Stylus': ['stylelint-stylus']
+  };
+  pkg.devDependencies = {
+    ...pkg.devDependencies,
+    // ESLint 全家桶
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-prettier": "^5.1.3",
+    // Vue 专属
+    ...(answers.framework === 'Vue' && {
+      "eslint-plugin-vue": "^9.20.0",
+      "vue-eslint-parser": "^9.4.2"
+    }),
+    // React 专属
+    ...(answers.framework === 'React' && {
+      "eslint-plugin-react": "^7.33.2",
+      "eslint-plugin-react-hooks": "^4.6.0"
+    }),
+    // TypeScript 支持
+    ...(answers.language === 'TypeScript' && {
+      "@typescript-eslint/eslint-plugin": "^6.19.1",
+      "@typescript-eslint/parser": "^6.19.1"
+    }),
+    // Prettier
+    "prettier": "^3.2.5",
+    // Stylelint
+    "stylelint": "^15.10.0",
+    "stylelint-config-standard": "^34.0.0",
+    "stylelint-config-prettier": "^9.0.5",
+    // Husky
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
+    // CSS 预处理器 Lint 插件
+    // ...(lintDeps[answers.preprocessor] && {
+    //   ...lintDeps[answers.preprocessor].reduce((acc, dep) => ({ ...acc, [dep]: 'latest' }), {})
+    // })
+  };
+}
+
+// 新增 .gitignore 生成函数
+function generateGitIgnore(targetPath, answers) {
+  const ignoreRules = new Set([
+    '# 通用规则',
+    'node_modules',
+    'dist',
+    'build',
+    '.env',
+    '.env.local',
+    '.cache',
+    '.DS_Store',
+    'coverage',
+    '*.log',
+    'npm-debug.log*',
+    'yarn-debug.log*',
+    'yarn-error.log*',
+    '.idea',
+    '.vscode',
+    '.temp',
+    '.husky/_', // 排除 Husky 内部目录
+
+    '# 构建工具相关',
+    ...(answers.builder === 'Vite' ? [
+      '.vite',
+      '*.local'
+    ] : [
+      'webpack-assets.json'
+    ]),
+
+    '# 框架相关',
+    ...(answers.framework === 'React' ? [
+      '.eslintcache'
+    ] : [
+      '*.vue.html' // Vue 特殊文件
+    ]),
+
+    '# 代码规范工具',
+    ...(answers.needLint ? [
+      '.eslintcache',
+      '.stylelintcache',
+      '!/.eslintrc.js', // 保留配置文件
+      '!/.prettierrc',
+      '!/.stylelintrc.js'
+    ] : []),
+
+    '# TypeScript 生成文件',
+    ...(answers.language === 'TypeScript' ? [
+      '*.tsbuildinfo',
+      'dist-types'
+    ] : [])
+  ]);
+
+  fs.writeFileSync(
+    path.join(targetPath, '.gitignore'),
+    Array.from(ignoreRules).join('\n')
+  );
 }

@@ -15,8 +15,17 @@ const msg = ref('<%= msg %>')
 const count = ref(0)
 </script>
 
-<style scoped>
+<style <% if (cssPreprocessor !== 'CSS') { %>lang="<%= styleLang %>"<% } %>>
 .app {
   color: #42b983;
+}
+.greeting {
+  <% if (cssPreprocessor === 'Sass/SCSS') { %>
+  &-text {
+    color: blue;
+  }
+  <% } else { %>
+  color: red;
+  <% } %>
 }
 </style>

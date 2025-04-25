@@ -5,7 +5,7 @@
   </div>
 </template>
 
-<script>
+<script <% if (language === 'TypeScript') { %>lang="ts"<% } %>>
 <% if (language === 'TypeScript') { %>
 export default {
   name: 'App',
@@ -26,8 +26,17 @@ export default {
 <% } %>
 </script>
 
-<style scoped>
+<style <% if (cssPreprocessor !== 'CSS') { %>lang="<%= styleLang %>"<% } %>>
 .app {
   color: #42b983;
+}
+.greeting {
+  <% if (cssPreprocessor === 'Sass/SCSS') { %>
+  &-text {
+    color: blue;
+  }
+  <% } else { %>
+  color: red;
+  <% } %>
 }
 </style>
