@@ -1,0 +1,3 @@
+// _variables.less.tpl
+@primary-color: #42b983;
+@text-color: #2c3e50;

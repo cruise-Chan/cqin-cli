@@ -1,13 +1,18 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+<% if (needRouter) { %>
+import { BrowserRouter } from 'react-router-dom'
+<% } %>
+import App from './App.<%= ext %>'
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
-
-root.render(
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <% if (needRouter) { %>
+    <BrowserRouter>
+    <% } %>
+      <App />
+    <% if (needRouter) { %>
+    </BrowserRouter>
+    <% } %>
   </React.StrictMode>
-);
+)

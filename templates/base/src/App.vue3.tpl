@@ -10,11 +10,6 @@ const msg = ref('<%= msg %>')
   </div>
 </template>
 
-<script setup>
-// 组合式 API 示例
-const count = ref(0)
-</script>
-
 <style <% if (cssPreprocessor !== 'CSS') { %>lang="<%= styleLang %>"<% } %>>
 .app {
   color: #42b983;
