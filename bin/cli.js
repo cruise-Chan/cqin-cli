@@ -71,7 +71,7 @@ program
       const extMap = {
         React: {
           main: answers.language === "TypeScript" ? "tsx" : "jsx",
-          app: "jsx",
+          app: answers.language === "TypeScript" ? "tsx" : "jsx",
         },
         Vue: {
           main: answers.language === "TypeScript" ? "ts" : "js",
@@ -79,6 +79,9 @@ program
         },
       };
       const { main: mainExt, app: appExt } = extMap[answers.framework];
+
+      console.log(answers.language, 'answers.language')
+      console.log(appExt, 'appExt')
 
       // 3. 创建项目目录
       const targetPath = path.resolve(process.cwd(), projectName);
@@ -108,13 +111,14 @@ program
         framework: answers.framework,
         needRouter: answers.needRouter,
         language: answers.language,
+        ext: mainExt,
       };
 
       if (answers.framework === "React" && answers.needRouter) {
         mainData.wrapperComponent = "BrowserRouter";
       }
       const mainContent = renderTemplate(
-        path.join(__dirname, `../templates/base/src/main.${mainExt}.tpl`),
+        path.join(__dirname, `../templates/base/src/main.${mainExt}.ejs`),
         mainData
       );
       fs.writeFileSync(path.join(srcDir, `main.${mainExt}`), mainContent);
@@ -139,15 +143,15 @@ program
         answers.version === "3.x" &&
         answers.language === "TypeScript"
       ) {
-        appPath = path.join(__dirname, `../templates/base/src/App.vue3-ts.tpl`);
+        appPath = path.join(__dirname, `../templates/base/src/App.vue3-ts.ejs`);
       } else if (
         answers.framework === "Vue" &&
         answers.version === "3.x" &&
         answers.language === "JavaScript"
       ) {
-        appPath = path.join(__dirname, `../templates/base/src/App.vue3.tpl`);
+        appPath = path.join(__dirname, `../templates/base/src/App.vue3.ejs`);
       } else {
-        path.join(__dirname, `../templates/base/src/App.${appExt}.tpl`);
+        appPath = path.join(__dirname, `../templates/base/src/App.${appExt}.ejs`);
       }
       const appContent = renderTemplate(appPath, {
         framework: answers.framework,
@@ -157,24 +161,33 @@ program
         styleLang,
         styleExt,
       });
+      console.log(appExt, '12222')
       fs.writeFileSync(path.join(srcDir, `App.${appExt}`), appContent);
-
+      
       // 新增：为 React 生成独立样式文件 --------------------------
       if (answers.framework === "React" && answers.cssPreprocessor !== "CSS") {
         const styleTemplatePath = path.join(
           __dirname,
-          `../templates/styles/react/${answers.cssPreprocessor}.tpl`
+          `../templates/styles/react/${styleExt}.ejs`
         );
 
         const styleContent = fs.readFileSync(styleTemplatePath, "utf-8");
         fs.writeFileSync(path.join(srcDir, `App.${styleExt}`), styleContent);
       }
+
       // 6. 生成构建配置
+      const extensions = [
+        answers.language === 'TypeScript' && answers.framework === 'React' && 'tsx',
+        answers.language === 'TypeScript' && 'ts',
+        'js', 
+        answers.framework === 'React' && 'jsx',
+      ].filter(Boolean)
+      console.log(extensions, 'extensions')
       const configExt = answers.language === "TypeScript" ? "ts" : "js";
       if (answers.builder === "Webpack") {
         ['common', 'dev', 'prod'].forEach(env => {
           const configContent = renderTemplate(
-            path.join(__dirname, `../templates/configs/webpack/${env}.js.tpl`),
+            path.join(__dirname, `../templates/configs/webpack/${env}.js.ejs`),
             {
               framework: answers.framework,
               language: answers.language,
@@ -185,7 +198,8 @@ program
                 'Stylus': 'stylus-loader'
               }[answers.cssPreprocessor],
               styleExt,
-              ext: configExt
+              ext: mainExt,
+              extensions: extensions.join(','),
             }
           );
 
@@ -198,7 +212,7 @@ program
         const configContent = renderTemplate(
           path.join(
             __dirname,
-            `../templates/configs/${answers.builder.toLowerCase()}/vite.config.js.tpl`
+            `../templates/configs/${answers.builder.toLowerCase()}/vite.config.js.ejs`
           ),
           {
             framework: answers.framework,
@@ -226,7 +240,7 @@ program
       // 7. 生成语言配置
       if (answers.language === "TypeScript") {
         const tsConfig = renderTemplate(
-          path.join(__dirname, "../templates/specials/tsconfig.json.tpl"),
+          path.join(__dirname, "../templates/specials/tsconfig.json.ejs"),
           { framework: answers.framework }
         );
         fs.writeFileSync(path.join(targetPath, "tsconfig.json"), tsConfig);
@@ -249,13 +263,11 @@ program
             path.join(_targetPath, "public"),
             path.basename(templatePath)
           );
-          console.log(deleteFilePath, "删除文件...");
           fs.unlink(deleteFilePath, (err) => {
             if (err) {
               console.error("删除文件时发生错误：", err);
               return;
             }
-            console.log("文件删除成功！");
           });
         }
       };
@@ -279,9 +291,9 @@ program
 
         // 根据选择的预处理器复制对应变量模板
         const varTemplateMap = {
-          'Sass/SCSS': '_variables.scss.tpl',
-          'Less': '_variables.less.tpl',
-          'Stylus': '_variables.styl.tpl'
+          'Sass/SCSS': '_variables.scss.ejs',
+          'Less': '_variables.less.ejs',
+          'Stylus': '_variables.styl.ejs'
         };
 
         fs.copySync(
@@ -297,7 +309,7 @@ program
         // 生成主入口文件
         fs.writeFileSync(
           path.join(stylesDir, '_index.scss'),
-          renderTemplate(path.join(__dirname, '../templates/styles/_index.scss.tpl'))
+          renderTemplate(path.join(__dirname, '../templates/styles/_index.scss.ejs'))
         );
 
         // 生成变量文件
@@ -320,13 +332,13 @@ program
           routerTemplate = path.join(
             __dirname,
             `../templates/routes/vue${answers.version === "3.x" ? "3" : "2"
-            }-router.${routerExt}.tpl`
+            }-router.${routerExt}.ejs`
           );
         } else {
           const routerExt = answers.language === "TypeScript" ? "tsx" : "jsx";
           routerTemplate = path.join(
             __dirname,
-            `../templates/routes/react-router.${routerExt}.tpl`
+            `../templates/routes/react-router.${routerExt}.ejs`
           );
         }
 
@@ -337,7 +349,7 @@ program
         fs.writeFileSync(
           path.join(
             routesDir,
-            // path.basename(routerTemplate).replace(".tpl", "")
+            // path.basename(routerTemplate).replace(".ejs", "")
             `router.${answers.language === "TypeScript" ? "ts" : "js"}`
           ),
           routerContent
@@ -347,19 +359,15 @@ program
         const pagesDir = path.join(srcDir, 'views');
         fs.mkdirSync(pagesDir);
 
-        console.log(pagesDir, "pagesDir");
-
         // 在生成路由配置之后添加：
         ["Home", "About"].forEach((page) => {
           const templatePath = path.join(
             __dirname,
             `../templates/components/${answers.framework === "Vue"
-              ? `vue${answers.version === "3.x" ? "" : "2"}-page.${appExt}.tpl`
-              : "react-page.tsx.tpl"
+              ? `vue${answers.version === "3.x" ? "" : "2"}-page.${appExt}.ejs`
+              : "react-page.tsx.ejs"
             }`
           );
-
-          console.log(templatePath, "templatePath");
 
           const pageContent = renderTemplate(templatePath, {
             name: page,
@@ -380,7 +388,7 @@ program
             const styleContent = renderTemplate(
               path.join(
                 __dirname,
-                `../templates/styles/react/${answers.cssPreprocessor}.tpl`
+                `../templates/styles/react/${styleExt}.ejs`
               ),
               { name: page }
             );
@@ -534,15 +542,24 @@ function getDevDependencies(answers) {
         answers.version === "3.x" ? "^4.2.3" : "^2.3.4";
     }
   } else {
-    devDeps.webpack = "^5.88.2";
+    devDeps.webpack = "5.89.0";
     devDeps['css-loader'] = '^6.8.0',
     devDeps['style-loader'] = '^3.3.1',
     devDeps['webpack-merge'] = '^5.9.0',
-    devDeps["webpack-cli"] = "^5.1.4";
-    devDeps["webpack-dev-server"] = "^4.15.1";
+    devDeps["webpack-cli"] = "4.10.0";
+    devDeps["webpack-dev-server"] = "4.15.1";
+    devDeps["babel-core"] = "^6.26.3";
+    devDeps["babel-loader"] = "^8.3.0";
+    devDeps["@babel/core"] = "^7.20.0";
+    devDeps["@babel/preset-env"] = "^7.20.0";
     if (answers.framework === "React") {
-      devDeps["@babel/preset-react"] = "^7.22.5";
-      devDeps["babel-loader"] = "^9.1.2";
+      devDeps["@babel/preset-react"] = "^7.18.6";
+      devDeps["react-refresh"] = "0.14.0";
+      devDeps["@pmmmwh/react-refresh-webpack-plugin"] = "0.5.11";
+      if(answers.language === "TypeScript"){
+        devDeps["@babel/preset-typescript"] = "^7.27.0";
+      }
+      devDeps["@babel/plugin-transform-runtime"] = "^7.26.10";
     }
     if (answers.framework === "Vue") {
       devDeps["vue-loader"] =

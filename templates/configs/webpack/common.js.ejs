@@ -3,6 +3,8 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 <% if (framework === 'Vue') { %>
 import { VueLoaderPlugin } from 'vue-loader';<% } %>
+<% if (framework === 'React') { %>
+import ReactRefreshWebpackPlugin  from '@pmmmwh/react-refresh-webpack-plugin';<% } %>
 <% if (cssPreprocessor === 'Sass/SCSS') { %>
 import sass from 'sass';<% } %>
 
@@ -12,23 +14,48 @@ const commonConfig = {
   output: {
     filename: '[name].bundle.js',
     path: path.resolve(__dirname, 'dist'),
+    publicPath: '/', // 必须添加此项
     clean: true
   },
   module: {
     rules: [
-      <% if (framework === 'React') { %>
       {
-        test: /\.(jsx|tsx)$/,
+        test: /\.(js|jsx|ts|tsx)$/, // 同时支持 JS/TS 和 JSX/TSX
         exclude: /node_modules/,
-        use: 'babel-loader'
-      },<% } else { %>
-      {
-        test: /\.vue$/,
-        loader: 'vue-loader',
-        options: {
-          reactivityTransform: true
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              ['@babel/preset-env', { 
+                targets: "> 0.25%, not dead", 
+                useBuiltIns: 'entry', 
+                corejs: 3 
+              }],
+              <% if (framework === 'React') { %>
+              '@babel/preset-react',<% } %>
+              <% if (language === 'TypeScript') { %>
+              '@babel/preset-typescript'<% } %>
+              <% if (framework === 'Vue') { %>
+              '@vue/babel-preset-jsx'<% } %>
+            ],
+            plugins: [
+              <% if (framework === 'React') { %>
+              '@babel/plugin-transform-runtime'<% } %>
+              <% if (framework === 'Vue') { %>
+              '@babel/plugin-transform-typescript'<% } %>
+            ].filter(Boolean)
+          }
         }
-      },<% } %>
+      },
+      <% if (framework === 'Vue') { %>
+        {
+          test: /\.vue$/,
+          loader: 'vue-loader',
+          options: {
+            reactivityTransform: true
+          }
+        },
+      <% } %>
       {
         test: /\.css$/,
         use: ['style-loader', 'css-loader']
@@ -63,20 +90,27 @@ const commonConfig = {
       {
         test: /\.(png|svg|jpg|jpeg|gif)$/i,
         type: 'asset/resource'
-      }
+      },
     ]
   },
-  plugins: [<% if (framework === 'Vue') { %>
-    new VueLoaderPlugin()<% } %>
+  plugins: [
+    <% if (framework === 'Vue') { %>
+    new VueLoaderPlugin(),<% } %>
+    <% if (framework === 'React') { %>
+    new ReactRefreshWebpackPlugin(),<% } %>
   ],
   resolve: {
-    extensions: ['.<%= ext %>', 
+    extensions: ['.<%= extensions %>', 
     <% if (cssPreprocessor !== 'CSS') { %>'.<%= styleExt %>'<% } %>
     ].filter(Boolean),
     alias: {
       '@': path.resolve(__dirname, 'src')
     }
-  }
+  },
+  stats: {
+    errorDetails: true,
+    children: true
+  },
 };
 
 export default commonConfig;
