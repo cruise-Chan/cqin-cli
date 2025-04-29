@@ -265,6 +265,21 @@ program
           ),
           configContent
         );
+
+        
+        const postcssContent = renderTemplate(
+          path.join(
+            __dirname,
+            `../templates/configs/postcss/postcss.config.js`
+          ),
+        );
+        fs.writeFileSync(
+          path.join(
+            targetPath,
+            `postcss.config.js`
+          ),
+          postcssContent
+        );
       }
 
       // 生成layout文件
@@ -678,6 +693,9 @@ function getDevDependencies(answers) {
       devDeps["@vitejs/plugin-vue"] =
         answers.version === "3.x" ? "^4.2.3" : "^2.3.4";
     }
+    devDeps["modern-normalize"] = "^3.0.1";
+    devDeps["postcss-preset-env"] = "^10.1.6";
+    devDeps["cssnano"] = "^7.0.6";
   } else {
     devDeps.webpack = "5.89.0";
     devDeps['css-loader'] = '^6.8.0',

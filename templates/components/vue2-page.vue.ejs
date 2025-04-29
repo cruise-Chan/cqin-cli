@@ -23,12 +23,11 @@ const count = ref(0)
 
 <style <% if (cssPreprocessor !== 'CSS') { %>lang="<%= styleLang %>"<% } %>>
 <% if (cssPreprocessor === 'Sass/SCSS') { %>
-@use "@/styles" as v;
 .home-container {
   padding: 2rem;
   
   h1 {
-    color: v.$primary-color;
+    color: $primary-color;
   }
 
   nav {
