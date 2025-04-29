@@ -4,14 +4,18 @@ import About from '../views/About.vue'
 
 const routes = [
   {
-    path: '/',
-    name: 'Home',
-    component: Home
+    path: '/login',
+    component: () => import('@/views/Login.vue'),
+    meta: { noLayout: true }
   },
   {
-    path: '/about',
-    name: 'About',
-    component: About
+    path: '/',
+    component: () => import('@/layouts/MainLayout.vue'),
+    children: [
+      { path: '/home', component: () => import('@/views/Home.vue') },
+      { path: '/about', component: () => import('@/views/About.vue') },
+      { path: '', redirect: '/home' }
+    ]
   }
 ]
 

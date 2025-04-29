@@ -5,6 +5,8 @@ import { BrowserRouter } from 'react-router-dom'
 <% } %>
 import App from './App.<%= ext %>'
 
+import 'antd/dist/reset.css';
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <% if (needRouter) { %>

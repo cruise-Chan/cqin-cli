@@ -1,14 +1,17 @@
-<script setup>
-import { ref } from 'vue'
-
-const msg = ref('<%= msg %>')
-</script>
-
 <template>
-  <div class="app">
-    <h1>{{ msg }}</h1>
-  </div>
+  <router-view v-slot="{ Component, route }">
+    <component :is="route.meta.noLayout ? Component : MainLayout">
+      <component :is="Component" />
+    </component>
+  </router-view>
 </template>
+
+<script setup>
+  import { ref } from 'vue'
+  import MainLayout from '@/layouts/MainLayout.vue'
+  
+  const msg = ref('<%= msg %>')
+</script>
 
 <style <% if (cssPreprocessor !== 'CSS') { %>lang="<%= styleLang %>"<% } %>>
 .app {

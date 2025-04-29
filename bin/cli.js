@@ -9,7 +9,6 @@ import ora from "ora";
 import ejs from "ejs";
 
 import { fileURLToPath } from "url";
-import { version } from "os";
 // ESM环境获取__dirname
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -40,6 +39,22 @@ program
           name: "language",
           message: "语言:",
           choices: ["TypeScript", "JavaScript"],
+        },
+        {
+          type: "list",
+          name: "uiFramework",
+          message: "选择UI框架:",
+          choices: (prev) => {
+            if (prev.framework === "React") {
+              return ["Ant Design", "None"]
+            } else {
+              if (prev.version === "3.x") {
+                return ["Ant Design Vue", "Element Plus", "None"]
+              } else {
+                return ["Ant Design Vue", "Element UI", "None"]
+              }
+            }
+          }
         },
         {
           type: "list",
@@ -123,7 +138,8 @@ program
         needStore: answers.needStore,
         storePath: answers.framework === "Vue" && answers.version === "3.x"
           ? "pinia"
-          : "vuex"
+          : "vuex",
+        ...answers,
       };
 
       if (answers.framework === "React" && answers.needRouter) {
@@ -251,6 +267,46 @@ program
         );
       }
 
+      // 生成layout文件
+      if (answers.framework === "Vue" && answers.version === "3.x" && answers.uiFramework === 'Element Plus') {
+        const layoutContent = renderTemplate(
+          path.join(__dirname, `../templates/ui-layouts/element-plus-layout.vue.ejs`),
+          {
+            ...answers,
+            styleLang,
+            styleExt,
+          }
+        );
+        const loginContent = renderTemplate(
+          path.join(__dirname, `../templates/views/vue3-emelent-plus-Login.vue`),
+          {}
+        );
+        const homeContent = renderTemplate(
+          path.join(__dirname, `../templates/views/vue3-emelent-plus-Home.vue`),
+          {}
+        );
+        const layoutDir = path.join(srcDir, "layouts");
+        const viewsDir = path.join(srcDir, "views");
+        // 确保目录存在
+        if (!fs.existsSync(layoutDir)) {
+          fs.mkdirSync(layoutDir, { recursive: true });
+        }
+        console.log(!fs.existsSync(viewsDir), 678)
+        if (!fs.existsSync(viewsDir)) {
+          try {
+            fs.mkdirSync(viewsDir, { recursive: true });
+          } catch (err) {
+            console.log(err, 'err')
+            if (err.code !== 'EEXIST') {
+              throw err;
+            }
+          }
+        }
+        fs.writeFileSync(path.join(layoutDir, `MainLayout.vue`), layoutContent);
+        fs.writeFileSync(path.join(viewsDir, `Login.vue`), loginContent);
+        fs.writeFileSync(path.join(viewsDir, `Home.vue`), homeContent);
+      }
+
       // 7. 生成语言配置
       if (answers.language === "TypeScript") {
         const tsConfig = renderTemplate(
@@ -371,7 +427,9 @@ program
 
         // 创建示例页面
         const pagesDir = path.join(srcDir, 'views');
-        fs.mkdirSync(pagesDir);
+        if(!fs.existsSync(pagesDir)){
+          fs.mkdirSync(pagesDir);
+        }
 
         // 在生成路由配置之后添加：
         ["Home", "About"].forEach((page) => {
@@ -650,6 +708,21 @@ function getDevDependencies(answers) {
     if (answers.language === "TypeScript") {
       devDeps["@babel/preset-typescript"] = "^7.27.0";
     }
+  }
+  if (answers.uiFramework === 'Ant Design') {
+    devDeps["antd"] = "^5.24.9";
+  }
+  if (answers.uiFramework === 'Ant Design Vue' && answers.version === '3.x') {
+    devDeps["ant-design-vue"] = "4.x";
+  }
+  if (answers.uiFramework === 'Ant Design Vue' && answers.version === '2.x') {
+    devDeps["ant-design-vue"] = "^1.7.8";
+  }
+  if (answers.uiFramework === 'Element Plus') {
+    devDeps["element-plus"] = "^2.9.9";
+  }
+  if (answers.uiFramework === 'Element UI') {
+    devDeps["element-ui"] = "^2.15.12";
   }
   // CSS 预处理器依赖
   const baseDeps = {

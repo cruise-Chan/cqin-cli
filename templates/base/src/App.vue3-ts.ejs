@@ -1,11 +1,14 @@
 <template>
-  <div class="app">
-    <h1>{{ msg.text }}</h1>
-  </div>
+  <router-view v-slot="{ Component, route }">
+    <component :is="route.meta.noLayout ? Component : MainLayout">
+      <component :is="Component" />
+    </component>
+  </router-view>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import MainLayout from '@/layouts/MainLayout.vue'
 
 interface Message {
   text: string
