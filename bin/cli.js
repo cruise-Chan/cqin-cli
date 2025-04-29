@@ -9,6 +9,7 @@ import ora from "ora";
 import ejs from "ejs";
 
 import { fileURLToPath } from "url";
+import { version } from "os";
 // ESM环境获取__dirname
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -50,6 +51,12 @@ program
           type: "confirm",
           name: "needRouter",
           message: "是否集成路由?",
+          default: true,
+        },
+        {
+          type: "confirm",
+          name: "needStore",
+          message: "是否集成状态管理工具?",
           default: true,
         },
         {
@@ -112,6 +119,11 @@ program
         needRouter: answers.needRouter,
         language: answers.language,
         ext: mainExt,
+        version: answers.version,
+        needStore: answers.needStore,
+        storePath: answers.framework === "Vue" && answers.version === "3.x"
+          ? "pinia"
+          : "vuex"
       };
 
       if (answers.framework === "React" && answers.needRouter) {
@@ -163,7 +175,7 @@ program
       });
       console.log(appExt, '12222')
       fs.writeFileSync(path.join(srcDir, `App.${appExt}`), appContent);
-      
+
       // 新增：为 React 生成独立样式文件 --------------------------
       if (answers.framework === "React" && answers.cssPreprocessor !== "CSS") {
         const styleTemplatePath = path.join(
@@ -177,12 +189,14 @@ program
 
       // 6. 生成构建配置
       const extensions = [
-        answers.language === 'TypeScript' && answers.framework === 'React' && 'tsx',
-        answers.language === 'TypeScript' && 'ts',
-        'js', 
-        answers.framework === 'React' && 'jsx',
+        answers.language === 'TypeScript' && answers.framework === 'React' && '.tsx',
+        answers.language === 'TypeScript' && '.ts',
+        '.js',
+        answers.framework === 'React' && '.jsx',
       ].filter(Boolean)
       console.log(extensions, 'extensions')
+      const _extensions = extensions.map(s => `'${s}'`).join(',')
+      console.log(_extensions, '_extensions')
       const configExt = answers.language === "TypeScript" ? "ts" : "js";
       if (answers.builder === "Webpack") {
         ['common', 'dev', 'prod'].forEach(env => {
@@ -199,7 +213,7 @@ program
               }[answers.cssPreprocessor],
               styleExt,
               ext: mainExt,
-              extensions: extensions.join(','),
+              extensions: _extensions,
             }
           );
 
@@ -400,6 +414,34 @@ program
         });
       }
 
+      console.log(answers.version, 'answers.version11')
+
+      // 在生成路由配置之后添加store生成逻辑
+      if (answers.needStore && answers.framework === "Vue") {
+        const storeDir = path.join(srcDir, "store");
+        fs.mkdirSync(storeDir);
+
+        const storeTemplate = answers.version === "3.x"
+          ? `pinia-store.${answers.language === "TypeScript" ? 'ts' : 'js'}.ejs`
+          : `vuex-store.${answers.language === "TypeScript" ? 'ts' : 'js'}.ejs`;
+
+        console.log(answers.version, 'answers.version')
+        const storeContent = renderTemplate(
+          path.join(__dirname, `../templates/store/${storeTemplate}`),
+          {
+            language: answers.language,
+            needRouter: answers.needRouter,
+            version: answers.version,
+            needStore: answers.needStore,
+          }
+        );
+
+        fs.writeFileSync(
+          path.join(storeDir, `index.${answers.language === "TypeScript" ? 'ts' : 'js'}`),
+          storeContent
+        );
+      }
+
       // 8. 生成package.json
       const pkg = {
         name: projectName,
@@ -432,6 +474,33 @@ program
           "*.{js,jsx,ts,tsx,vue}": ["eslint --fix", "prettier --write"],
           "*.{css,scss}": ["stylelint --fix", "prettier --write"],
         };
+      }
+
+      // 在生成语言配置部分添加
+      if (answers.language === "TypeScript" && answers.needStore) {
+        if (answers.framework === "Vue") {
+          if (answers.version === "3.x") {
+            fs.writeFileSync(
+              path.join(targetPath, "src/shims-pinia.d.ts"),
+              `import { Pinia } from 'pinia';
+              declare module 'pinia' {
+                export interface PiniaCustomProperties {
+                  // 添加你的自定义属性类型
+                }
+              }`
+            );
+          } else {
+            fs.writeFileSync(
+              path.join(targetPath, "src/shims-vuex.d.ts"),
+              `import { Store } from 'vuex';
+              declare module '@vue/runtime-core' {
+                interface ComponentCustomProperties {
+                  $store: Store<any>;
+                }
+              }`
+            );
+          }
+        }
       }
 
       // 集成代码规范
@@ -523,10 +592,20 @@ function getDependencies(answers) {
       deps["react-router-dom"] = "^6.20.0";
     }
   }
-  if(answers.builder === "Webpack"){
-    deps["terser-webpack-plugin"] =  '^5.3.9',
-    deps["mini-css-extract-plugin"] = '^2.7.6',
-    deps["css-minimizer-webpack-plugin"] = '^5.0.1'
+  if (answers.builder === "Webpack") {
+    deps["terser-webpack-plugin"] = '^5.3.9',
+      deps["mini-css-extract-plugin"] = '^2.7.6',
+      deps["css-minimizer-webpack-plugin"] = '^5.0.1'
+  }
+  // 添加状态管理依赖
+  if (answers.needStore) {
+    if (answers.framework === "Vue") {
+      if (answers.version === "3.x") {
+        deps["pinia"] = "^2.1.7";
+      } else {
+        deps["vuex"] = "^3.6.2";
+      }
+    }
   }
   return deps;
 }
@@ -544,9 +623,9 @@ function getDevDependencies(answers) {
   } else {
     devDeps.webpack = "5.89.0";
     devDeps['css-loader'] = '^6.8.0',
-    devDeps['style-loader'] = '^3.3.1',
-    devDeps['webpack-merge'] = '^5.9.0',
-    devDeps["webpack-cli"] = "4.10.0";
+      devDeps['style-loader'] = '^3.3.1',
+      devDeps['webpack-merge'] = '^5.9.0',
+      devDeps["webpack-cli"] = "4.10.0";
     devDeps["webpack-dev-server"] = "4.15.1";
     devDeps["babel-core"] = "^6.26.3";
     devDeps["babel-loader"] = "^8.3.0";
@@ -556,9 +635,6 @@ function getDevDependencies(answers) {
       devDeps["@babel/preset-react"] = "^7.18.6";
       devDeps["react-refresh"] = "0.14.0";
       devDeps["@pmmmwh/react-refresh-webpack-plugin"] = "0.5.11";
-      if(answers.language === "TypeScript"){
-        devDeps["@babel/preset-typescript"] = "^7.27.0";
-      }
       devDeps["@babel/plugin-transform-runtime"] = "^7.26.10";
     }
     if (answers.framework === "Vue") {
@@ -566,6 +642,13 @@ function getDevDependencies(answers) {
         answers.version === "3.x" ? "^17.2.2" : "^15.12.1";
       if (answers.version === "2.x")
         devDeps["vue-template-compiler"] = "^2.7.14";
+      if (answers.language === "TypeScript") {
+        devDeps["@babel/plugin-transform-typescript"] = "^7.27.0";
+      }
+      devDeps["@vue/babel-preset-jsx"] = "^1.4.0";
+    }
+    if (answers.language === "TypeScript") {
+      devDeps["@babel/preset-typescript"] = "^7.27.0";
     }
   }
   // CSS 预处理器依赖

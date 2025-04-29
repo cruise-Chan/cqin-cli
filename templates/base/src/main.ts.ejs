@@ -1,7 +1,28 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import router from './routes/router'
 
-createApp(App)
-  .use(router)
-  .mount('#app')
+import { createApp } from 'vue';
+import type { App as AppType } from 'vue';
+import App from './App.vue';
+<% if (needRouter) { %>
+import { router } from './routes/router';
+<% } %>
+<% if (needStore) { %>
+<% if (version === '3.x') { %>
+import { createPinia } from 'pinia';
+<% } else { %>
+import store from './store';
+<% } %>
+<% } %>
+
+const app: AppType = createApp(App);
+<% if (needRouter) { %>
+app.use(router);
+<% } %>
+<% if (needStore) { %>
+<% if (version === '3.x') { %>
+app.use(createPinia());
+<% } else { %>
+app.use(store);
+<% } %>
+<% } %>
+
+app.mount('#app');

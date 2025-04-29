@@ -34,7 +34,7 @@ const commonConfig = {
               <% if (framework === 'React') { %>
               '@babel/preset-react',<% } %>
               <% if (language === 'TypeScript') { %>
-              '@babel/preset-typescript'<% } %>
+              '@babel/preset-typescript', <% } %>
               <% if (framework === 'Vue') { %>
               '@vue/babel-preset-jsx'<% } %>
             ],
@@ -100,7 +100,7 @@ const commonConfig = {
     new ReactRefreshWebpackPlugin(),<% } %>
   ],
   resolve: {
-    extensions: ['.<%= extensions %>', 
+    extensions: ['.<%= ext %>', 
     <% if (cssPreprocessor !== 'CSS') { %>'.<%= styleExt %>'<% } %>
     ].filter(Boolean),
     alias: {

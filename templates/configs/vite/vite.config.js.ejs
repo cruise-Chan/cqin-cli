@@ -10,6 +10,12 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  server: {
+    host: '0.0.0.0', // 监听所有地址
+    port: 8080,       // 指定端口
+    open: true,       // 启动后自动打开浏览器
+    strictPort: false, // false端口占用则+1
+  },
   plugins: [
     <% if (framework === 'React') { %>
     react()
