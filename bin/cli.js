@@ -16,7 +16,6 @@ program
   .version("1.0.0", "-v, --version")
   .arguments("<project-name>")
   .action(async (projectName) => {
-    const spinner = ora().start("正在初始化项目...");
 
     try {
       // 1. 用户交互提问
@@ -33,12 +32,6 @@ program
           message: "版本:",
           choices: (prev) =>
             prev.framework === "Vue" ? ["3.x", "2.x"] : ["17.x", "18.x"],
-        },
-        {
-          type: "list",
-          name: "language",
-          message: "语言:",
-          choices: ["TypeScript", "JavaScript"],
         },
         {
           type: "list",
@@ -63,22 +56,64 @@ program
           choices: ["Vite", "Webpack"],
         },
         {
-          type: "confirm",
-          name: "needRouter",
-          message: "是否集成路由?",
-          default: true,
+          type: "checkbox",
+          name: "plugins",
+          message: "选择需要包含的功能：（↑/↓ 切换，空格选择， a 全选， 回车确认）",
+          choices: (prev) => [
+            { 
+              name: "TypeScript", 
+              checked: true,
+              value: 'TypeScript',
+            },
+            prev.framework === 'Vue' && 
+            { 
+              name: prev.version === '3.x' ? "Pinia (状态管理)" : "VueX (状态管理)",
+              value: 'needStore',
+            },
+            { 
+              name: "Router (单页面应用开发)" ,
+              value: 'needRouter',
+            },
+            { 
+              name: "端到端测试" ,
+              value: 'needTest',
+            },
+            { 
+              name: "ESLint (错误预防)" ,
+              value: 'needLint',
+            },
+          ].filter(Boolean),
         },
+        // {
+        //   type: "list",
+        //   name: "language",
+        //   message: "语言:",
+        //   choices: ["TypeScript", "JavaScript"],
+        // },
+        // {
+        //   type: "confirm",
+        //   name: "needRouter",
+        //   message: "是否集成路由?",
+        //   default: true,
+        // },
+        // {
+        //   type: "confirm",
+        //   name: "needStore",
+        //   message: "是否集成状态管理工具?",
+        //   default: true,
+        // },
+        // {
+        //   type: "confirm",
+        //   name: "needLint",
+        //   message: "是否集成代码规范(ESLint+Prettier+Stylelint)?",
+        //   default: true,
+        // },
         {
-          type: "confirm",
-          name: "needStore",
-          message: "是否集成状态管理工具?",
-          default: true,
-        },
-        {
-          type: "confirm",
-          name: "needLint",
-          message: "是否集成代码规范(ESLint+Prettier+Stylelint)?",
-          default: true,
+          type: "list",
+          name: "testFramework",
+          when: (answers) => answers.plugins.includes("needTest"),
+          message: "请选择一个端到端的测试框架",
+          choices: ["Cypress", "Playwright"],
         },
         {
           type: "list",
@@ -88,6 +123,14 @@ program
           default: "Sass/SCSS",
         },
       ]);
+      const spinner = ora().start("正在初始化项目...");
+
+      answers.needRouter = answers.plugins.includes("needRouter");
+      answers.needLint = answers.plugins.includes("needLint");
+      answers.needStore = answers.plugins.includes("needStore");
+      answers.language = answers.plugins.includes("TypeScript") ? "TypeScript" : "JavaScript";
+
+      console.log(answers, 'answers')
 
       // 2. 确定文件扩展名
       const extMap = {
@@ -102,9 +145,6 @@ program
       };
       const { main: mainExt, app: appExt } = extMap[answers.framework];
 
-      console.log(answers.language, 'answers.language')
-      console.log(appExt, 'appExt')
-
       // 3. 创建项目目录
       const targetPath = path.resolve(process.cwd(), projectName);
       if (fs.existsSync(targetPath)) {
@@ -118,6 +158,14 @@ program
         path.join(__dirname, "../templates/base/public"),
         path.join(targetPath, "public")
       );
+
+      // 复制test框架目录
+      fs.copySync(
+        path.join(__dirname, "../templates/test/cypress"),
+        path.join(targetPath, "cypress")
+      );
+
+
       const srcDir = path.join(targetPath, "src");
       fs.mkdirSync(srcDir);
 
@@ -266,7 +314,7 @@ program
           configContent
         );
 
-        
+
         const postcssContent = renderTemplate(
           path.join(
             __dirname,
@@ -442,7 +490,7 @@ program
 
         // 创建示例页面
         const pagesDir = path.join(srcDir, 'views');
-        if(!fs.existsSync(pagesDir)){
+        if (!fs.existsSync(pagesDir)) {
           fs.mkdirSync(pagesDir);
         }
 
@@ -548,6 +596,14 @@ program
           "*.{css,scss}": ["stylelint --fix", "prettier --write"],
         };
       }
+      if (answers.testFramework === "Cypress") {
+        pkg.scripts = {
+          ...pkg.scripts,
+          prepare: pkg.scripts.prepare ? "cypress install" : pkg.scripts.prepare + " && cypress install",
+          "test:e2e": "start-server-and-test preview http://localhost:4173 'cypress run --e2e'",
+          "test:e2e:dev": "start-server-and-test 'vite dev --port 4173' http://localhost:4173 'cypress open --e2e'",
+        };
+      }
 
       // 在生成语言配置部分添加
       if (answers.language === "TypeScript" && answers.needStore) {
@@ -587,8 +643,8 @@ program
       );
 
       // 9. 安装依赖
-      spinner.text = "正在安装依赖...";
-      execSync("yarn install", { cwd: targetPath, stdio: "inherit" });
+      // spinner.text = "正在安装依赖...";
+      // execSync("yarn install", { cwd: targetPath, stdio: "inherit" });
 
       // 在脚手架代码中添加构建工具警告抑制
       if (answers.cssPreprocessor === 'Sass/SCSS') {
@@ -634,6 +690,7 @@ program
       spinner.succeed(`
         项目创建成功！运行以下命令：
         ${chalk.cyan(`cd ${projectName}`)}
+        ${chalk.cyan("yarn install")}
         ${chalk.cyan("yarn dev")}
       `);
     } catch (err) {
@@ -685,6 +742,13 @@ function getDependencies(answers) {
 
 function getDevDependencies(answers) {
   const devDeps = {};
+  if (answers.language === 'TypeScript') {
+    devDeps["@types/node"] = "^22.15.14";
+  }
+  if (answers.testFramework === 'Cypress') {
+    devDeps["cypress"] = "^14.2.1";
+    devDeps["start-server-and-test"] = "^2.0.0";
+  }
   if (answers.builder === "Vite") {
     devDeps.vite = "^4.4.5";
     if (answers.framework === "React")

@@ -1,11 +1,12 @@
 import { defineConfig } from 'vite';
-import modernNormalize from 'modern-normalize/modern-normalize.css?inline'
 <% if (framework === 'React') { %>
 import react from '@vitejs/plugin-react';
 <% } else { %>
 import vue from '@vitejs/plugin-vue';
+import postcssPresetEnvPlugin from 'postcss-preset-env';
+import * as cssnanoPlugin from 'cssnano';
 <% } %>
-import path from 'path';
+import * as path from 'path';
 // ESM环境获取__dirname
 import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -18,13 +19,13 @@ export default defineConfig({
     strictPort: false, // false端口占用则+1
   },
   plugins: [
-    <% if (framework === 'React') { %>
+    <%_ if (framework === 'React') { _%>
     react()
-    <% } else { %>
+    <%_ } else { _%>
     vue({
       reactivityTransform: true // 启用响应性语法糖
     })
-    <% } %>
+    <%_ } _%>
   ],
   css: {
     preprocessorOptions: {
@@ -33,7 +34,7 @@ export default defineConfig({
        additionalData: `
           @use "@/styles" as *;
           @use "sass:meta";
-          @import "${modernNormalize}";
+          @import "modern-normalize/modern-normalize.css";
         `,
         charset: false
       }
@@ -50,7 +51,7 @@ export default defineConfig({
       <%_ } _%>
     },
     postcss: {
-      plugins: [import('postcss-preset-env')]
+      plugins: [postcssPresetEnvPlugin]
     },
   },
   optimizeDeps: {
@@ -60,7 +61,7 @@ export default defineConfig({
     cssCodeSplit: true,
     minify: 'esbuild',
     rollupOptions: {
-      plugins: [import('cssnano')]
+      plugins: [cssnanoPlugin]
     }
   },
   resolve: {

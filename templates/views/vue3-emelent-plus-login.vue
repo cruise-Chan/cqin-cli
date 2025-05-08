@@ -30,5 +30,6 @@
   }
   .login-box {
     width: 400px;
+    margin: 200px auto;
   }
   </style>
