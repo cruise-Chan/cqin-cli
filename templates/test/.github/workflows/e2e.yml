@@ -1,0 +1,11 @@
+// .github/workflows/e2e.yml
+jobs:
+  cypress-run:
+    steps:
+      - name: Run Cypress tests
+        run: |
+          yarn install
+          yarn test:e2e:ci
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          CYPRESS_GROUP: 'production-smoke-tests'

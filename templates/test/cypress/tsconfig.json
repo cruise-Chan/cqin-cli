@@ -1,8 +1,14 @@
 {
-  "include": ["./e2e/**/*", "./support/**/*"],
-  "exclude": ["./support/component.*"],
-  "compilerOptions": {
-    "isolatedModules": false,
-    "types": ["cypress"]
+    "compilerOptions": {
+      "target": "es5",
+      "lib": ["es5", "dom"],
+      "types": ["cypress", "cypress-file-upload"],
+      "allowJs": true,
+      "strict": true,
+      "baseUrl": "./",
+      "paths": {
+        "@/*": ["../src/*"]
+      }
+    },
+    "include": ["**/*.ts", "**/*.tsx"]
   }
-}

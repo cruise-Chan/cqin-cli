@@ -16,6 +16,7 @@ program
   .version("1.0.0", "-v, --version")
   .arguments("<project-name>")
   .action(async (projectName) => {
+    let spinner;
 
     try {
       // 1. 用户交互提问
@@ -60,26 +61,26 @@ program
           name: "plugins",
           message: "选择需要包含的功能：（↑/↓ 切换，空格选择， a 全选， 回车确认）",
           choices: (prev) => [
-            { 
-              name: "TypeScript", 
+            {
+              name: "TypeScript",
               checked: true,
               value: 'TypeScript',
             },
-            prev.framework === 'Vue' && 
-            { 
+            prev.framework === 'Vue' &&
+            {
               name: prev.version === '3.x' ? "Pinia (状态管理)" : "VueX (状态管理)",
               value: 'needStore',
             },
-            { 
-              name: "Router (单页面应用开发)" ,
+            {
+              name: "Router (单页面应用开发)",
               value: 'needRouter',
             },
-            { 
-              name: "端到端测试" ,
+            {
+              name: "端到端测试",
               value: 'needTest',
             },
-            { 
-              name: "ESLint (错误预防)" ,
+            {
+              name: "ESLint (错误预防)",
               value: 'needLint',
             },
           ].filter(Boolean),
@@ -123,7 +124,7 @@ program
           default: "Sass/SCSS",
         },
       ]);
-      const spinner = ora().start("正在初始化项目...");
+      spinner = ora().start("正在初始化项目...");
 
       answers.needRouter = answers.plugins.includes("needRouter");
       answers.needLint = answers.plugins.includes("needLint");
@@ -158,13 +159,6 @@ program
         path.join(__dirname, "../templates/base/public"),
         path.join(targetPath, "public")
       );
-
-      // 复制test框架目录
-      fs.copySync(
-        path.join(__dirname, "../templates/test/cypress"),
-        path.join(targetPath, "cypress")
-      );
-
 
       const srcDir = path.join(targetPath, "src");
       fs.mkdirSync(srcDir);
@@ -231,7 +225,7 @@ program
       }
       const appContent = renderTemplate(appPath, {
         framework: answers.framework,
-        msg: answers.framework === "React" ? "Hello React!" : "Hello Vue!",
+        msg: "Welcome to Home",
         language: answers.language,
         cssPreprocessor: answers.cssPreprocessor,
         styleLang,
@@ -588,7 +582,7 @@ program
           "lint:js": "eslint --fix --ext .js,.jsx,.ts,.tsx,.vue src",
           "lint:style": 'stylelint --fix "src/**/*.{css,scss,vue}"',
           format: "prettier --write .",
-          prepare: "husky install",
+          // prepare: "husky install",
         };
 
         pkg["lint-staged"] = {
@@ -596,13 +590,138 @@ program
           "*.{css,scss}": ["stylelint --fix", "prettier --write"],
         };
       }
+
+      // 复制test框架目录
+      // fs.copySync(
+      //   path.join(__dirname, "../templates/test/cypress"),
+      //   path.join(targetPath, "cypress")
+      // );
+
       if (answers.testFramework === "Cypress") {
+        // 创建cypress目录结构
+        const cypressDir = path.join(targetPath, "cypress");
+        const cypressSubDirs = ["e2e", "fixtures", "support"];
+        cypressSubDirs.forEach(dir => {
+          fs.mkdirSync(path.join(cypressDir, dir), { recursive: true });
+        });
+
+        // 生成类型声明文件
+        const typeDefsContent = `// 完整类型声明见步骤1的内容
+        ${fs.readFileSync(path.join(__dirname, '../templates/test/cypress/support/index.d.ts'), 'utf-8')}`
+
+        fs.writeFileSync(
+          path.join(cypressDir, 'support/index.d.ts'),
+          ejs.render(typeDefsContent, { uiFramework: answers.uiFramework })
+        )
+
+        // 生成核心配置文件
+        const configFixtureContent = ejs.render(
+          fs.readFileSync(
+            path.join(__dirname, '../templates/test/cypress/fixtures/config.json.ejs'),
+            'utf-8'
+          ),
+          {
+            projectName,
+            devPort: answers.builder === 'Vite' ? 5173 : 3000
+          }
+        )
+
+        fs.writeFileSync(
+          path.join(cypressDir, 'fixtures/config.json'),
+          configFixtureContent
+        )
+
+        // 确保生成正确的文件扩展名
+        const commandFileExt = answers.language === 'TypeScript' ? 'ts' : 'js'
+
+        // ========== 生成 support 文件 ==========
+        // 使用模板生成 commands.js
+        const commandsTemplate = fs.readFileSync(
+          path.join(__dirname, '../templates/test/cypress/support/commands.js.ejs'),
+          'utf-8'
+        )
+        const commandsContent = ejs.render(commandsTemplate, {
+          projectName,
+          uiFramework: answers.uiFramework,
+          framework: answers.framework,
+          cypressVersion: '13.6.0',
+        })
+        fs.writeFileSync(
+          path.join(cypressDir, `support/commands.${commandFileExt}`),
+          commandsContent
+        )
+        
+        // 生成 e2e.js
+        const e2eTemplate = fs.readFileSync(
+          path.join(__dirname, '../templates/test/cypress/support/e2e.js.ejs'),
+          'utf-8'
+        )
+        fs.writeFileSync(
+          path.join(cypressDir, 'support/e2e.js'),
+          ejs.render(e2eTemplate)
+        )
+
+        // tsconfig.json
+        if(answers.language === 'TypeScript'){
+          const tsconfigContent = fs.readFileSync(
+            path.join(__dirname, '../templates/test/cypress/tsconfig.json'),
+            'utf-8'
+          )
+          fs.writeFileSync(
+            path.join(cypressDir, 'tsconfig.json'),
+            tsconfigContent 
+          )
+        }
+
+        // ========== 生成 fixtures 文件 ==========
+        const exampleFixtureTemplate = fs.readFileSync(
+          path.join(__dirname, '../templates/test/cypress/fixtures/example.json.ejs'),
+          'utf-8'
+        )
+        const exampleFixtureContent = ejs.render(exampleFixtureTemplate, {
+          projectName
+        })
+        fs.writeFileSync(
+          path.join(cypressDir, 'fixtures/example.json'),
+          exampleFixtureContent
+        )
+
+        // 生成配置文件
+        const cypressConfig = renderTemplate(
+          path.join(__dirname, "../templates/test/cypress.config.js.ejs"),
+          { builder: answers.builder }
+        );
+        fs.writeFileSync(path.join(targetPath, "cypress.config.js"), cypressConfig);
+
+        // 生成示例测试用例
+        const testCaseContent = renderTemplate(
+          path.join(__dirname, "../templates/test/cypress/e2e/homepage.cy.js.ejs"),
+          { projectName, framework: answers.framework }
+        );
+        fs.writeFileSync(
+          path.join(cypressDir, "e2e/homepage.cy.js"),
+          testCaseContent
+        );
+
         pkg.scripts = {
           ...pkg.scripts,
-          prepare: pkg.scripts.prepare ? "cypress install" : pkg.scripts.prepare + " && cypress install",
-          "test:e2e": "start-server-and-test preview http://localhost:4173 'cypress run --e2e'",
-          "test:e2e:dev": "start-server-and-test 'vite dev --port 4173' http://localhost:4173 'cypress open --e2e'",
+          "preview": "vite preview",
+          // prepare: pkg.scripts.prepare ? "cypress install" : pkg.scripts.prepare + " ; cypress install",
+          "test:e2e": "npm run build && start-server-and-test preview http://localhost:4173 'cypress run --e2e'",
+          "test:e2e:dev": "start-server-and-test 'vite dev --port 5173' http://localhost:5173 'cypress open --e2e'",
+          "test:e2e:ci": "npm run build && start-server-and-test preview http://localhost:4173 'cypress run --e2e --headless'"
         };
+
+        // GitHub Actions 集成
+        fs.copySync(
+          path.join(__dirname, "../templates/test/.github"),
+          path.join(targetPath, ".github")
+        );
+        // 添加 CI 所需的环境变量
+        const envContent = `CYPRESS_RECORD_KEY=\nBASE_URL=http://localhost:5173`;
+        fs.writeFileSync(path.join(targetPath, ".env.ci"), envContent);
+
+        execSync('npx cypress install', { stdio: 'inherit' });
       }
 
       // 在生成语言配置部分添加
@@ -747,7 +866,9 @@ function getDevDependencies(answers) {
   }
   if (answers.testFramework === 'Cypress') {
     devDeps["cypress"] = "^14.2.1";
-    devDeps["start-server-and-test"] = "^2.0.0";
+    devDeps["start-server-and-test"] = "^2.0.3";
+    devDeps["@cypress/webpack-preprocessor"] = "^5.15.0";
+    devDeps["@cypress/webpack-dev-server"] = "^3.2.0";
   }
   if (answers.builder === "Vite") {
     devDeps.vite = "^4.4.5";
@@ -997,6 +1118,14 @@ function generateGitIgnore(targetPath, answers) {
     "# TypeScript 生成文件",
     ...(answers.language === "TypeScript"
       ? ["*.tsbuildinfo", "dist-types"]
+      : []),
+    ...(answers.testFramework === "Cypress"
+      ? ["# Cypress",
+        "cypress/videos/",
+        "cypress/screenshots/",
+        "cypress/downloads/",
+        "# Cypress 动态配置",
+        "cypress/fixtures/config.local.json"]
       : []),
   ]);
 
