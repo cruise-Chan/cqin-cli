@@ -20,9 +20,3 @@ build/
 
 # .eslintignore
 dist/
-public/
-*.config.js
-
-# .stylelintignore
-dist/
-public/

@@ -4,11 +4,11 @@
     <el-aside width="200px" class="bg-gray-100">
       <div class="logo p-4">Logo</div>
       <el-menu router :default-active="$route.path" class="border-none">
-        <el-menu-item index="/home">
+        <el-menu-item class="el-menu-item" index="/home">
           <el-icon><House /></el-icon>
           <span>首页</span>
         </el-menu-item>
-        <el-menu-item index="/about">
+        <el-menu-item class="el-menu-item" index="/about">
           <el-icon><InfoFilled /></el-icon>
           <span>关于</span>
         </el-menu-item>
@@ -18,15 +18,16 @@
     <el-container>
       <!-- 顶部导航 -->
       <el-header class="flex items-center border-b">
-        <div class="flex-1">欢迎使用系统</div>
+        <div class="flex-1">欢迎使用<%= projectName %>系统</div>
         <el-dropdown>
           <span class="el-dropdown-link">
             <el-avatar icon="UserFilled" />
+            <div class="border-b">{{ NAME }}</div>
           </span>
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item>个人中心</el-dropdown-item>
-              <el-dropdown-item>退出登录</el-dropdown-item>
+              <el-dropdown-item @click="layout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -39,7 +40,7 @@
 
       <!-- 底部信息 -->
       <el-footer class="text-center text-sm text-gray-500">
-        © 2024 Your Company. All rights reserved.
+        © 2025 Your Company. All rights reserved.
       </el-footer>
     </el-container>
   </el-container>
@@ -47,6 +48,13 @@
 
 <script setup lang="ts">
 import { House, InfoFilled, UserFilled } from "@element-plus/icons-vue";
+import { useRouter } from 'vue-router';
+import { NAME } from '@/common/constants'
+
+const router = useRouter();
+const layout = () => {
+  router.push('/login'); // 跳转到登录页
+};
 </script>
 
 <style <% if (cssPreprocessor !== 'CSS') { %>lang="<%= styleLang %>"<% } %>>
@@ -126,6 +134,10 @@ $text-color: #2c3e50;
     background: $header-bg;
     color: rgba($text-color, 0.65);
     box-shadow: 0 -1px 4px rgba(0,21,41,.08);
+  }
+
+  .el-menu-item {
+    color: white;
   }
 }
 
@@ -208,6 +220,10 @@ $text-color: #2c3e50;
     color: rgba(@text-color, 0.65);
     box-shadow: 0 -1px 4px rgba(0,21,41,.08);
   }
+
+  .el-menu-item {
+    color: white;
+  }
 }
 <%_ } _%>
 
@@ -277,6 +293,9 @@ $text-color = #2c3e50
     background $header-bg
     color rgba($text-color, 0.65)
     box-shadow 0 -1px 4px rgba(0,21,41,.08)
+  
+ .el-menu-item
+    color white
 <%_ } _%>
 
 </style>

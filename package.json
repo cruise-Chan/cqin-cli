@@ -1,6 +1,6 @@
 {
   "name": "cqin-cli",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "type": "module",
   "bin": {
     "cqin-cli": "./bin/cli.js"
@@ -29,5 +29,9 @@
     "@babel/preset-react": "^7.26.3",
     "@vue/babel-preset-jsx": "^1.4.0",
     "babel-loader": "^10.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }

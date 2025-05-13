@@ -131,7 +131,17 @@ program
       answers.needStore = answers.plugins.includes("needStore");
       answers.language = answers.plugins.includes("TypeScript") ? "TypeScript" : "JavaScript";
 
-      console.log(answers, 'answers')
+      // 全局变量
+      // 创建项目目录
+      const targetPath = path.resolve(process.cwd(), projectName);
+      if (fs.existsSync(targetPath)) {
+        spinner.fail(`目录 ${chalk.red(projectName)} 已存在`);
+        process.exit(1);
+      }
+      fs.mkdirSync(targetPath);
+      const configExt = answers.language === "TypeScript" ? "ts" : "js";
+      const srcDir = path.join(targetPath, "src");
+      fs.mkdirSync(srcDir);
 
       // 2. 确定文件扩展名
       const extMap = {
@@ -146,22 +156,11 @@ program
       };
       const { main: mainExt, app: appExt } = extMap[answers.framework];
 
-      // 3. 创建项目目录
-      const targetPath = path.resolve(process.cwd(), projectName);
-      if (fs.existsSync(targetPath)) {
-        spinner.fail(`目录 ${chalk.red(projectName)} 已存在`);
-        process.exit(1);
-      }
-      fs.mkdirSync(targetPath);
-
       // 4. 复制基础模板
       fs.copySync(
         path.join(__dirname, "../templates/base/public"),
         path.join(targetPath, "public")
       );
-
-      const srcDir = path.join(targetPath, "src");
-      fs.mkdirSync(srcDir);
 
       // 5. 生成入口文件
       const renderTemplate = (tplPath, data) => {
@@ -231,7 +230,6 @@ program
         styleLang,
         styleExt,
       });
-      console.log(appExt, '12222')
       fs.writeFileSync(path.join(srcDir, `App.${appExt}`), appContent);
 
       // 新增：为 React 生成独立样式文件 --------------------------
@@ -252,10 +250,7 @@ program
         '.js',
         answers.framework === 'React' && '.jsx',
       ].filter(Boolean)
-      console.log(extensions, 'extensions')
       const _extensions = extensions.map(s => `'${s}'`).join(',')
-      console.log(_extensions, '_extensions')
-      const configExt = answers.language === "TypeScript" ? "ts" : "js";
       if (answers.builder === "Webpack") {
         ['common', 'dev', 'prod'].forEach(env => {
           const configContent = renderTemplate(
@@ -332,6 +327,7 @@ program
             ...answers,
             styleLang,
             styleExt,
+            projectName,
           }
         );
         const loginContent = renderTemplate(
@@ -348,7 +344,6 @@ program
         if (!fs.existsSync(layoutDir)) {
           fs.mkdirSync(layoutDir, { recursive: true });
         }
-        console.log(!fs.existsSync(viewsDir), 678)
         if (!fs.existsSync(viewsDir)) {
           try {
             fs.mkdirSync(viewsDir, { recursive: true });
@@ -409,6 +404,14 @@ program
           builder: answers.builder,
           ext: answers.language === "TypeScript" ? "ts" : "js",
         }
+      );
+
+      // 直接复制的文件
+      const commonDir = path.join(srcDir, "common");
+      fs.mkdirSync(commonDir);
+      fs.copySync(
+        path.join(__dirname, `../templates/common/constants.${configExt}`),
+        path.join(commonDir, `constants.${configExt}`)
       );
 
       // 生成全局变量文件
@@ -529,8 +532,6 @@ program
         });
       }
 
-      console.log(answers.version, 'answers.version11')
-
       // 在生成路由配置之后添加store生成逻辑
       if (answers.needStore && answers.framework === "Vue") {
         const storeDir = path.join(srcDir, "store");
@@ -540,7 +541,6 @@ program
           ? `pinia-store.${answers.language === "TypeScript" ? 'ts' : 'js'}.ejs`
           : `vuex-store.${answers.language === "TypeScript" ? 'ts' : 'js'}.ejs`;
 
-        console.log(answers.version, 'answers.version')
         const storeContent = renderTemplate(
           path.join(__dirname, `../templates/store/${storeTemplate}`),
           {
@@ -562,7 +562,7 @@ program
         name: projectName,
         version: "1.0.0",
         type: "module",
-        license: "MIT",
+        license: "ISC",
         scripts: {
           dev:
             answers.builder === "Vite"
