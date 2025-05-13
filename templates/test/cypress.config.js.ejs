@@ -1,20 +1,29 @@
 import { defineConfig } from 'cypress';
 
+<%_ if (builder === 'Webpack') { _%>
+import webpackDevServer from '@cypress/webpack-dev-server'; // ESM 静态导入
+<%_ } else { _%>
+import { injectDevServer } from '@cypress/vite-dev-server'; // Vite 适配器
+<%_ } _%>
+
 export default defineConfig({
   e2e: {
     baseUrl: 'http://localhost:5173',
-    defaultCommandTimeout: 10000, // 超时时间设为10秒
-    experimentalMemoryManagement: true, // 启用内存管理
-    numTestsKeptInMemory: 10, // 减少内存占用
+    defaultCommandTimeout: 10000,
+    experimentalMemoryManagement: true,
+    numTestsKeptInMemory: 10,
     setupNodeEvents(on, config) {
-      // 添加查询命令兼容性处理
+      <%_ if (builder === 'Webpack') { _%>
       on('dev-server:start', (options) => {
-        return require('@cypress/webpack-dev-server')(options)
-      })
+        return webpackDevServer(options); // 直接使用已导入的模块
+      });
+      <%_ } else { _%>
+      injectDevServer(on, config); // 使用 Vite 适配器
+      <%_ } _%>
       return config;
     },
     env: {
-      apiPrefix: '/api/v1' // 与脚手架生成配置一致
+      apiPrefix: '/api/v1'
     },
   },
 });

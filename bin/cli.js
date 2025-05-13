@@ -562,6 +562,7 @@ program
         name: projectName,
         version: "1.0.0",
         type: "module",
+        license: "MIT",
         scripts: {
           dev:
             answers.builder === "Vite"
@@ -867,8 +868,12 @@ function getDevDependencies(answers) {
   if (answers.testFramework === 'Cypress') {
     devDeps["cypress"] = "^14.2.1";
     devDeps["start-server-and-test"] = "^2.0.3";
-    devDeps["@cypress/webpack-preprocessor"] = "^5.15.0";
-    devDeps["@cypress/webpack-dev-server"] = "^3.2.0";
+    if(answers.builder === 'Webpack'){
+      devDeps["@cypress/webpack-preprocessor"] = "^5.15.0";
+      devDeps["@cypress/webpack-dev-server"] = "^3.2.0";
+    } else {
+      devDeps["postcss-preset-env"] = "^10.1.6";
+    }
   }
   if (answers.builder === "Vite") {
     devDeps.vite = "^4.4.5";
