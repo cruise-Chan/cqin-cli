@@ -3,10 +3,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 <% } else { %>
 import vue from '@vitejs/plugin-vue';
-import postcssPresetEnvPlugin from 'postcss-preset-env';
-import * as cssnanoPlugin from 'cssnano';
 <% } %>
-import * as path from 'path';
+import path from 'path';
 // ESM环境获取__dirname
 import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -37,7 +35,6 @@ export default defineConfig({
        additionalData: `
           @use "@/styles" as *;
           @use "sass:meta";
-          @import "modern-normalize/modern-normalize.css";
         `,
         charset: false
       }
@@ -54,17 +51,16 @@ export default defineConfig({
       <%_ } _%>
     },
     postcss: {
-      plugins: [postcssPresetEnvPlugin]
+      plugins: [
+
+      ]
     },
-  },
-  optimizeDeps: {
-    include: ['postcss-preset-env', 'cssnano']
   },
   build: {
     cssCodeSplit: true,
     minify: 'esbuild',
     rollupOptions: {
-      plugins: [cssnanoPlugin]
+      plugins: []
     }
   },
   resolve: {

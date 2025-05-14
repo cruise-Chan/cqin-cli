@@ -9,7 +9,8 @@ export default defineConfig(async ({ env }) => {
     postcssPresetEnv({
       autoprefixer: { grid: true },
       features: {
-        'nesting-rules': true
+        'nesting-rules': true,
+        // 'logical-properties-and-values': false, // 若项目无需兼容旧浏览器,请打开此行注释，可关闭 postcss-preset-env 的语法转换功能，仅保留前缀添加
       }
     })
   ]

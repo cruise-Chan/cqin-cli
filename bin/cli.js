@@ -32,7 +32,7 @@ program
           name: "version",
           message: "版本:",
           choices: (prev) =>
-            prev.framework === "Vue" ? ["3.x", "2.x"] : ["17.x", "18.x"],
+            prev.framework === "Vue" ? ["3.x", "2.x"] : ["18.x", "17.x" ],
         },
         {
           type: "list",
@@ -651,7 +651,7 @@ program
           path.join(cypressDir, `support/commands.${commandFileExt}`),
           commandsContent
         )
-        
+
         // 生成 e2e.js
         const e2eTemplate = fs.readFileSync(
           path.join(__dirname, '../templates/test/cypress/support/e2e.js.ejs'),
@@ -663,14 +663,14 @@ program
         )
 
         // tsconfig.json
-        if(answers.language === 'TypeScript'){
+        if (answers.language === 'TypeScript') {
           const tsconfigContent = fs.readFileSync(
             path.join(__dirname, '../templates/test/cypress/tsconfig.json'),
             'utf-8'
           )
           fs.writeFileSync(
             path.join(cypressDir, 'tsconfig.json'),
-            tsconfigContent 
+            tsconfigContent
           )
         }
 
@@ -868,13 +868,16 @@ function getDevDependencies(answers) {
   if (answers.testFramework === 'Cypress') {
     devDeps["cypress"] = "^14.2.1";
     devDeps["start-server-and-test"] = "^2.0.3";
-    if(answers.builder === 'Webpack'){
+    if (answers.builder === 'Webpack') {
       devDeps["@cypress/webpack-preprocessor"] = "^5.15.0";
       devDeps["@cypress/webpack-dev-server"] = "^3.2.0";
     } else {
       devDeps["postcss-preset-env"] = "^10.1.6";
     }
   }
+  devDeps["modern-normalize"] = "^3.0.1";
+  devDeps["postcss-preset-env"] = "^10.1.6";
+  devDeps["cssnano"] = "^7.0.6";
   if (answers.builder === "Vite") {
     devDeps.vite = "^4.4.5";
     if (answers.framework === "React")
@@ -883,9 +886,6 @@ function getDevDependencies(answers) {
       devDeps["@vitejs/plugin-vue"] =
         answers.version === "3.x" ? "^4.2.3" : "^2.3.4";
     }
-    devDeps["modern-normalize"] = "^3.0.1";
-    devDeps["postcss-preset-env"] = "^10.1.6";
-    devDeps["cssnano"] = "^7.0.6";
   } else {
     devDeps.webpack = "5.89.0";
     devDeps['css-loader'] = '^6.8.0',
@@ -893,6 +893,7 @@ function getDevDependencies(answers) {
       devDeps['webpack-merge'] = '^5.9.0',
       devDeps["webpack-cli"] = "4.10.0";
     devDeps["webpack-dev-server"] = "4.15.1";
+    devDeps["html-webpack-plugin"] = "^5.6.3";
     devDeps["babel-core"] = "^6.26.3";
     devDeps["babel-loader"] = "^8.3.0";
     devDeps["@babel/core"] = "^7.20.0";
@@ -905,7 +906,7 @@ function getDevDependencies(answers) {
     }
     if (answers.framework === "Vue") {
       devDeps["vue-loader"] =
-        answers.version === "3.x" ? "^17.2.2" : "^15.12.1";
+        answers.version === "3.x" ? "^17.2.2" : "^15.11.1";
       if (answers.version === "2.x")
         devDeps["vue-template-compiler"] = "^2.7.14";
       if (answers.language === "TypeScript") {
@@ -935,18 +936,21 @@ function getDevDependencies(answers) {
   // CSS 预处理器依赖
   const baseDeps = {
     'Sass/SCSS': {
-      'sass': '^1.71.0',       // 使用新版 Sass
-      'sass-loader': '^13.3.2'
+      'sass': '^1.71.0',
+      ...(answers.builder !== 'Vite' && { 'sass-loader': '^13.3.2' })
     },
     'Less': {
       'less': '^4.2.0',
-      'less-loader': '^11.1.3'
+      ...(answers.builder !== 'Vite' && { 'less-loader': '^11.1.3' })
     },
     'Stylus': {
       'stylus': '^0.59.0',
-      'stylus-loader': '^7.1.0'
+      ...(answers.builder !== 'Vite' && { 'stylus-loader': '^7.1.0' })
     }
   };
+
+  console.log(JSON.stringify(baseDeps), 'baseDeps222')
+  console.log(answers.cssPreprocessor, 'answers.cssPreprocessor111')
 
   // 添加预处理器依赖
   if (answers.cssPreprocessor !== "CSS") {
@@ -1033,11 +1037,6 @@ function generateLintConfig(targetPath, answers) {
 }
 
 function addLintDependencies(pkg, answers) {
-  const lintDeps = {
-    "Sass/SCSS": ["stylelint-scss"],
-    Less: ["stylelint-less"],
-    Stylus: ["stylelint-stylus"],
-  };
   pkg.devDependencies = {
     ...pkg.devDependencies,
     // ESLint 全家桶
@@ -1069,10 +1068,6 @@ function addLintDependencies(pkg, answers) {
     // Husky
     husky: "^9.0.11",
     "lint-staged": "^15.2.2",
-    // CSS 预处理器 Lint 插件
-    // ...(lintDeps[answers.preprocessor] && {
-    //   ...lintDeps[answers.preprocessor].reduce((acc, dep) => ({ ...acc, [dep]: 'latest' }), {})
-    // })
   };
 }
 

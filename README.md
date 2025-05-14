@@ -243,3 +243,7 @@ git checkout -b feat/awesome-feature
 3. 提交符合规范的代码
 
 4. 发起Pull Request
+
+## 许可证
+MIT License © 2023 cqin-cli 开发者
+> 更多文档请访问：[项目Wiki](https://github.com/cruise-Chan/cqin-cli/wiki)
