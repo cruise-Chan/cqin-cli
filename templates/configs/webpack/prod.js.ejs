@@ -40,26 +40,7 @@ const prodConfig = {
     }
   },
   module: {
-    rules: [
-      {
-        test: /\.<%= styleExt %>$/,
-        use: [
-          MiniCssExtractPlugin.loader, // 替换 style-loader
-          'css-loader',
-          <% if (cssPreprocessor === 'Sass/SCSS') { %>
-          {
-            loader: 'sass-loader',
-            options: {
-              implementation: require('sass'),
-              sassOptions: {
-                outputStyle: 'compressed'
-              }
-            }
-          }<% } else { %>
-          '<%= loaderName %>'<% } %>
-        ]
-      }
-    ]
+    rules: []
   }
 };
 

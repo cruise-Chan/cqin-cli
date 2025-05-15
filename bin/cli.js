@@ -477,6 +477,7 @@ program
 
         const routerContent = renderTemplate(routerTemplate, {
           styleExt: answers.cssPreprocessor !== "CSS" ? styleExt : "css",
+          ...answers,
         });
 
         fs.writeFileSync(

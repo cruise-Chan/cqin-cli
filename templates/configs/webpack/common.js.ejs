@@ -15,7 +15,7 @@ const commonConfig = {
   output: {
     filename: '[name].bundle.js',
     path: path.resolve(__dirname, 'dist'),
-    publicPath: '/', // 必须添加此项
+    publicPath: '/', 
     clean: true
   },
   module: {
@@ -32,19 +32,22 @@ const commonConfig = {
                 useBuiltIns: 'entry', 
                 corejs: 3 
               }],
-              <% if (framework === 'React') { %>
-              '@babel/preset-react',<% } %>
-              <% if (language === 'TypeScript') { %>
-              '@babel/preset-typescript', <% } %>
-              <% if (framework === 'Vue') { %>
-              '@vue/babel-preset-jsx'<% } %>
+              <%_ if (framework === 'React') { _%>
+              '@babel/preset-react',<%_ } _%>
+              <%_ if (language === 'TypeScript') { _%>
+              '@babel/preset-typescript', <%_ } _%>
+              <%_ if (framework === 'Vue') { _%>
+              '@vue/babel-preset-jsx'
+              <%_ } _%>
             ],
             plugins: [
-              <% if (framework === 'React') { %>
-              '@babel/plugin-transform-runtime'<% } %>
-              <% if (framework === 'Vue') { %>
-              '@babel/plugin-transform-typescript'<% } %>
-            ].filter(Boolean)
+              <%_ if (framework === 'React') { _%>
+              '@babel/plugin-transform-runtime'
+              <%_ } _%>
+              <%_ if (framework === 'Vue') { _%>
+              '@babel/plugin-transform-typescript'
+              <%_ } _%>
+            ]
           }
         }
       },
@@ -76,7 +79,9 @@ const commonConfig = {
       {
         test: /\.<%= styleExt %>$/,
         use: [
-          'style-loader',
+          process.env.NODE_ENV === 'production' 
+          ? MiniCssExtractPlugin.loader 
+          : 'style-loader',
           'css-loader',
           {
             loader: '<%= loaderName %>',
