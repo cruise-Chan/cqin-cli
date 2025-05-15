@@ -115,9 +115,7 @@ const commonConfig = {
     new ReactRefreshWebpackPlugin(),<%_ } _%>
   ],
   resolve: {
-    extensions: ['.<%= ext %>', 
-    <% if (cssPreprocessor !== 'CSS') { %>'.<%= styleExt %>'<% } %>
-    ].filter(Boolean),
+    extensions: <%- JSON.stringify(extensions) %>, 
     alias: {
       '@': path.resolve(__dirname, 'src')
     }

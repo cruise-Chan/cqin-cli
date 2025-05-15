@@ -249,8 +249,11 @@ program
         answers.language === 'TypeScript' && '.ts',
         '.js',
         answers.framework === 'React' && '.jsx',
+        answers.framework === 'Vue' && '.vue',
       ].filter(Boolean)
-      const _extensions = extensions.map(s => `'${s}'`).join(',')
+      if(answers.cssPreprocessor !== 'Css'){
+        extensions.push(`.${styleExt}`)
+      }
       if (answers.builder === "Webpack") {
         ['common', 'dev', 'prod'].forEach(env => {
           const configContent = renderTemplate(
@@ -266,7 +269,7 @@ program
               }[answers.cssPreprocessor],
               styleExt,
               ext: mainExt,
-              extensions: _extensions,
+              extensions: extensions,
             }
           );
 
@@ -302,22 +305,22 @@ program
           ),
           configContent
         );
-
-
-        const postcssContent = renderTemplate(
-          path.join(
-            __dirname,
-            `../templates/configs/postcss/postcss.config.js`
-          ),
-        );
-        fs.writeFileSync(
-          path.join(
-            targetPath,
-            `postcss.config.js`
-          ),
-          postcssContent
-        );
       }
+
+      // 生成postcss配置文件
+      const postcssContent = renderTemplate(
+        path.join(
+          __dirname,
+          `../templates/configs/postcss/postcss.config.${answers.builder.toLowerCase()}.js`
+        ),
+      );
+      fs.writeFileSync(
+        path.join(
+          targetPath,
+          `postcss.config.js`
+        ),
+        postcssContent
+      );
 
       // 生成layout文件
       if (answers.framework === "Vue" && answers.version === "3.x" && answers.uiFramework === 'Element Plus') {
@@ -877,6 +880,7 @@ function getDevDependencies(answers) {
   }
   devDeps["modern-normalize"] = "^3.0.1";
   devDeps["postcss-preset-env"] = "^10.1.6";
+  devDeps["postcss-load-config"] = "^6.0.1";
   devDeps["cssnano"] = "^7.0.6";
   if (answers.builder === "Vite") {
     devDeps.vite = "^4.4.5";
@@ -890,6 +894,8 @@ function getDevDependencies(answers) {
     devDeps.webpack = "5.89.0";
     devDeps['css-loader'] = '^6.8.0',
       devDeps['style-loader'] = '^3.3.1',
+      devDeps['postcss-loader'] = '^8.1.1',
+      devDeps['autoprefixer'] = '^10.4.21',
       devDeps['webpack-merge'] = '^5.9.0',
       devDeps["webpack-cli"] = "4.10.0";
     devDeps["webpack-dev-server"] = "4.15.1";
@@ -1062,7 +1068,7 @@ function addLintDependencies(pkg, answers) {
     // Prettier
     prettier: "^3.2.5",
     // Stylelint
-    stylelint: "^15.10.0",
+    stylelint: "^14.16.1",
     "stylelint-config-standard": "^34.0.0",
     "stylelint-config-prettier": "^9.0.5",
     // Husky

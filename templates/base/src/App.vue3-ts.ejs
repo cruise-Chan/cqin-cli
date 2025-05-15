@@ -18,7 +18,7 @@ const msg = ref<Message>({ text: '<%= msg %>' })
 const count = ref<number>(0)
 </script>
 
-<style scoped>
+<style <% if (cssPreprocessor !== 'CSS') { %>lang="<%= styleLang %>"<% } %> scoped>
 .app {
   color: #42b983;
 }

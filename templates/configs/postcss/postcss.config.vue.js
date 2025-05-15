@@ -1,6 +1,8 @@
 import postcssPresetEnv from 'postcss-preset-env'
 import cssnano from 'cssnano'
-import { defineConfig } from 'postcss-load-config'
+import pkg from 'postcss-load-config';
+const { defineConfig } = pkg;
+
 
 export default defineConfig(async ({ env }) => {
   const isProduction = env === 'production'

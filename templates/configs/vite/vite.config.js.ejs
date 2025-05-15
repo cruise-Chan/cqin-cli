@@ -11,10 +11,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   server: {
-    host: '0.0.0.0', // 监听所有地址
-    port: process.env.PORT || 5173,  // 指定端口
-    open: false,       // 启动后自动打开浏览器
-    strictPort: false, // false端口占用则+1
+    host: '0.0.0.0', 
+    port: process.env.PORT || 5173,  
+    open: false,       
+    strictPort: false, 
   },
   preview: {
     port: process.env.PREVIEW_PORT || 4173
