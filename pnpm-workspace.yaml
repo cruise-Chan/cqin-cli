@@ -1,0 +1,3 @@
+packages:
+  - 'packages/*'
+  - '!packages/template/**'  # 模板不作为独立包管理

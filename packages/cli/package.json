@@ -1,0 +1,35 @@
+{
+  "name": "@cqin/cli",
+  "version": "1.0.1",
+  "type": "module",
+  "bin": {
+    "cqin": "./src/index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cli",
+    "package",
+    "package.json"
+  ],
+  "author": "Cruisechen",
+  "license": "MIT",
+  "description": "A CLI tool for managing your project",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "ejs": "^3.1.10",
+    "fs-extra": "^11.3.0",
+    "husky": "^9.1.7",
+    "inquirer": "^12.5.2",
+    "ora": "^8.2.0"
+  },
+  "devDependencies": {
+    "picocolors": "^1.1.1"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

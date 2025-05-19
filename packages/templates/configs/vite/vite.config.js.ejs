@@ -1,9 +1,13 @@
 import { defineConfig } from 'vite';
-<% if (framework === 'React') { %>
+<%_ if (framework === 'React') { _%>
 import react from '@vitejs/plugin-react';
-<% } else { %>
+<%_ } else { _%>
 import vue from '@vitejs/plugin-vue';
-<% } %>
+import vueDevTools from 'vite-plugin-vue-devtools'
+<%_ } _%>
+<%_ if(needJsx) { _%>
+import vueJsx from '@vitejs/plugin-vue-jsx'
+<%_ } _%>
 import path from 'path';
 // ESM环境获取__dirname
 import { fileURLToPath } from 'url';
@@ -21,11 +25,15 @@ export default defineConfig({
   },
   plugins: [
     <%_ if (framework === 'React') { _%>
-    react()
+    react(),
     <%_ } else { _%>
     vue({
       reactivityTransform: true // 启用响应性语法糖
-    })
+    }),
+    <%_ if(needJsx) { _%>
+    vueJsx(),
+    <%_ } _%>
+    vueDevTools(),
     <%_ } _%>
   ],
   css: {
