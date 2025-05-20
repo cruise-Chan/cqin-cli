@@ -19,13 +19,13 @@ import {
     addLintDependencies,
 } from '../utils/templateUtils.js'
 export async function initCommand(projectName) {
-    console.log(pc.green(`Hello, ${projectName}!`));
+    console.log(pc.green(`Hello, ${projectName}!!!`));
     let spinner;
     spinner = ora();
     // 创建项目目录
     const targetPath = path.resolve(process.cwd(), projectName);
     if (fs.existsSync(targetPath)) {
-        spinner.fail(`目录 ${chalk.red(projectName)} 已存在`);
+        spinner.fail(`目录 ${chalk.red(projectName)} 已存在!`);
         process.exit(1);
     }
     const templatesPath = path.join(__dirname, "../../templates")
