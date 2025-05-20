@@ -1,17 +1,17 @@
 {
   "name": "@cqin/cli",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "type": "module",
   "bin": {
-    "cqin": "src/index.js"
+    "cqin": "dist/index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublishOnly": "node ./scripts/copy-templates.js"
+    "build": "rollup -c", 
+    "prepublishOnly": "node ./scripts/copy-templates.js pnpm build"
   },
+  "main": "dist/index.js",  
   "files": [
-    "src",
-    "templates"
+    "dist"
   ],
   "keywords": [
     "cqin",
@@ -36,9 +36,12 @@
     "ora": "^8.2.0",
     "picocolors": "^1.1.1"
   },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup": "^4.41.0"
+  },
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
-  },
-  "main": "src/index.js"
+  }
 }
