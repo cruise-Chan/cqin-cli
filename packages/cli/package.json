@@ -1,15 +1,15 @@
 {
   "name": "@cqin/cli",
-  "version": "1.0.7",
+  "version": "1.0.8-alpha.0",
   "type": "module",
   "bin": {
     "cqin": "dist/index.js"
   },
   "scripts": {
-    "build": "rollup -c", 
+    "build": "rollup -c",
     "prepublishOnly": "node ./scripts/copy-templates.js pnpm build"
   },
-  "main": "dist/index.js",  
+  "main": "dist/index.js",
   "files": [
     "dist"
   ],
