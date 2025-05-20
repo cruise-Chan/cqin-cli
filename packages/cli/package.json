@@ -1,17 +1,27 @@
 {
   "name": "@cqin/cli",
-  "version": "1.0.1",
+  "version": "1.0.5",
   "type": "module",
   "bin": {
-    "cqin": "./src/index.js"
+    "cqin": "src/index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "node ./scripts/copy-templates.js"
   },
+  "files": [
+    "src",
+    "templates"
+  ],
   "keywords": [
+    "cqin",
     "cli",
-    "package",
-    "package.json"
+    "testing",
+    "generator",
+    "javascript",
+    "frontend",
+    "webpack",
+    "vite"
   ],
   "author": "Cruisechen",
   "license": "MIT",
@@ -23,13 +33,12 @@
     "fs-extra": "^11.3.0",
     "husky": "^9.1.7",
     "inquirer": "^12.5.2",
-    "ora": "^8.2.0"
-  },
-  "devDependencies": {
+    "ora": "^8.2.0",
     "picocolors": "^1.1.1"
   },
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
-  }
+  },
+  "main": "src/index.js"
 }

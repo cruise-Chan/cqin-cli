@@ -6,12 +6,19 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["cli", "package", "package.json"],
+  "keywords": [
+    "cli",
+    "package",
+    "package.json"
+  ],
   "author": "Cruisechen",
   "license": "MIT",
   "description": "A CLI tool for managing your project",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
+  },
+  "dependencies": {
+    "lerna": "^8.2.2"
   }
 }

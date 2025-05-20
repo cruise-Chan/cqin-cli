@@ -28,7 +28,7 @@ export async function initCommand(projectName) {
         spinner.fail(`目录 ${chalk.red(projectName)} 已存在`);
         process.exit(1);
     }
-    const templatesPath = path.join(__dirname, "../../../templates")
+    const templatesPath = path.join(__dirname, "../../templates")
 
     try {
         // 1. 用户交互提问

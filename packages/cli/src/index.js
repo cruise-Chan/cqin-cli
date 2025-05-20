@@ -8,7 +8,7 @@ import path from "node:path";
 import fs from "fs-extra";
 
 program
-    .version("1.0.3", "-v, --version")
+    .version("1.0.5", "-v, --version")
     .arguments("<project-name>")
     .action(initCommand);
 
