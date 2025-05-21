@@ -1,6 +1,6 @@
 {
   "name": "@cqin/cli",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "type": "module",
   "bin": {
     "cqin": "dist/index.js"
@@ -13,7 +13,7 @@
   "main": "dist/index.js",
   "files": [
     "dist",
-    "templates"
+    ".templates"
   ],
   "keywords": [
     "@cqin/cli",
