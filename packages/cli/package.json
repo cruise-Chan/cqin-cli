@@ -13,7 +13,7 @@
   "main": "dist/index.js",
   "files": [
     "dist",
-    ".templates"
+    ".templates/**/*"
   ],
   "keywords": [
     "@cqin/cli",

@@ -29,6 +29,9 @@ export async function initCommand(projectName) {
         process.exit(1);
     }
     const templatesPath = path.join(__dirname, "../../.templates")
+    const templateDir = path.join(__dirname, '..', '..', '.templates');
+    console.log(templateDir, 'templateDir');
+    console.log(templatesPath, 'templatesPath');
 
     try {
         // 1. 用户交互提问
