@@ -1,6 +1,6 @@
 {
   "name": "@cqin/cli",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "type": "module",
   "bin": {
     "cqin": "dist/index.js"
