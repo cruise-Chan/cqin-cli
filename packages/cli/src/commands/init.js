@@ -10,6 +10,7 @@ import ejs from "ejs";
 import { fileURLToPath } from "url";
 // ESM环境获取__dirname
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const isDev = process.env.NODE_ENV !== 'production'
 
 import {
     generateGitIgnore,
@@ -28,15 +29,8 @@ export async function initCommand(projectName) {
         spinner.fail(`目录 ${chalk.red(projectName)} 已存在!`);
         process.exit(1);
     }
-    console.log(process.env.NODE_ENV, '开发环境1');
-                                                                                                                                                                    
-    // 或者使用布尔变量
-    if (__DEV__) {
-    // 开发环境逻辑
-        console.log('开发环境2');
-    }
-    const templatesPath = path.join(__dirname, "../.templates")
-    console.log(templatesPath, 'templatesPath');
+    console.log(isDev, 'isDev')
+    const templatesPath = isDev ? path.join(__dirname, "../../.templates") : path.join(__dirname, "../.templates")
 
     try {
         // 1. 用户交互提问
