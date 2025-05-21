@@ -1,4 +1,5 @@
 import terser from '@rollup/plugin-terser';
+import replace from '@rollup/plugin-replace';
 
 export default {
   input: 'src/index.js',  // 入口文件

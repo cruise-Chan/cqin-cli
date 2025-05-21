@@ -40,6 +40,7 @@
     "picocolors": "^1.1.1"
   },
   "devDependencies": {
+    "@rollup/plugin-replace": "^6.0.2",
     "@rollup/plugin-terser": "^0.4.4",
     "rimraf": "^6.0.1",
     "rollup": "^4.41.0"
@@ -47,5 +48,6 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
-  }
+  },
+  "gitHead": "d597eee5d6c5b6de5772bcbdc9d40e6b914a13cf"
 }
