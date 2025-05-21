@@ -5,6 +5,7 @@ node_modules/
 dist/
 build/
 packages/cli/.templates/
+packages/cli/templates/
 
 # 忽略环境配置文件
 .env

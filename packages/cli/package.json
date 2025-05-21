@@ -8,7 +8,7 @@
   "scripts": {
     "build": "rollup -c",
     "prepublishOnly": "npm run clean && node ./scripts/copy-templates.js && pnpm build",
-    "clean": "rimraf dist .templates"
+    "clean": "rimraf dist"
   },
   "main": "dist/index.js",
   "files": [
