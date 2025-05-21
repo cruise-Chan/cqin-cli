@@ -28,9 +28,14 @@ export async function initCommand(projectName) {
         spinner.fail(`目录 ${chalk.red(projectName)} 已存在!`);
         process.exit(1);
     }
+    console.log(process.env.NODE_ENV, '开发环境1');
+                                                                                                                                                                    
+    // 或者使用布尔变量
+    if (__DEV__) {
+    // 开发环境逻辑
+        console.log('开发环境2');
+    }
     const templatesPath = path.join(__dirname, "../.templates")
-    const templateDir = path.join(__dirname, '..', '..', '.templates');
-    console.log(templateDir, 'templateDir');
     console.log(templatesPath, 'templatesPath');
 
     try {
