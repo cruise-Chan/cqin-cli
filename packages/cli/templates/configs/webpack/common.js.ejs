@@ -1,0 +1,134 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+<% if (framework === 'Vue') { %>
+import { VueLoaderPlugin } from 'vue-loader';<% } %>
+<% if (framework === 'React') { %>
+import ReactRefreshWebpackPlugin  from '@pmmmwh/react-refresh-webpack-plugin';<% } %>
+<% if (cssPreprocessor === 'Sass/SCSS') { %>
+import sass from 'sass';<% } %>
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+
+// 基础配置
+const commonConfig = {
+  entry: './src/main.<%= ext %>',
+  output: {
+    filename: '[name].bundle.js',
+    path: path.resolve(__dirname, 'dist'),
+    publicPath: '/', 
+    clean: true
+  },
+  module: {
+    rules: [
+      {
+        test: /\.(js|jsx|ts|tsx)$/, // 同时支持 JS/TS 和 JSX/TSX
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              ['@babel/preset-env', { 
+                targets: "> 0.25%, not dead", 
+                useBuiltIns: 'entry', 
+                corejs: 3 
+              }],
+              <%_ if (framework === 'React') { _%>
+              '@babel/preset-react',<%_ } _%>
+              <%_ if (language === 'TypeScript') { _%>
+              '@babel/preset-typescript', <%_ } _%>
+              <%_ if (framework === 'Vue') { _%>
+              '@vue/babel-preset-jsx'
+              <%_ } _%>
+            ],
+            plugins: [
+              <%_ if (framework === 'React') { _%>
+              '@babel/plugin-transform-runtime'
+              <%_ } _%>
+              <%_ if (framework === 'Vue') { _%>
+              '@babel/plugin-transform-typescript'
+              <%_ } _%>
+            ]
+          }
+        }
+      },
+      <% if (framework === 'Vue') { %>
+        {
+          test: /\.vue$/,
+          loader: 'vue-loader',
+          options: {
+            reactivityTransform: true
+          }
+        },
+      <% } %>
+      {
+        test: /\.css$/,
+        use: [
+          'style-loader', 
+          'css-loader',
+          {
+            loader: 'postcss-loader',
+            options: {
+              postcssOptions: {
+                config: path.resolve(__dirname, 'postcss.config.js'), // 显式引用配置文件
+              }
+            }
+          }
+        ]
+      },
+      <% if (cssPreprocessor !== 'CSS') { %>
+      {
+        test: /\.<%= styleExt %>$/,
+        use: [
+          process.env.NODE_ENV === 'production' 
+          ? MiniCssExtractPlugin.loader 
+          : 'style-loader',
+          'css-loader',
+          {
+            loader: '<%= loaderName %>',
+            options: {
+              <%_ if (cssPreprocessor === 'Sass/SCSS') { _%>
+              implementation: sass,
+              sassOptions: {
+                api: 'modern',
+                includePaths: [path.resolve(__dirname, 'src/styles')]
+              }<% } else if (cssPreprocessor === 'Less') { _%>
+              lessOptions: {
+                globalVars: {
+                  hack: `true; @import "~@/styles/_variables.less";`
+                }
+              }<% } else if (cssPreprocessor === 'Stylus') { _%>
+              stylusOptions: {
+                import: [path.resolve(__dirname, 'src/styles/_variables.styl')]
+              }<% } _%>
+            }
+          }
+        ]
+      },<% } %>
+      {
+        test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        type: 'asset/resource'
+      },
+    ]
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: './public/index.html'
+    }),
+    <%_ if (framework === 'Vue') { _%>
+    new VueLoaderPlugin(),<%_ } _%>
+    <%_ if (framework === 'React') { _%>
+    new ReactRefreshWebpackPlugin(),<%_ } _%>
+  ],
+  resolve: {
+    extensions: <%- JSON.stringify(extensions) %>, 
+    alias: {
+      '@': path.resolve(__dirname, 'src')
+    }
+  },
+  stats: {
+    errorDetails: true,
+    children: true
+  },
+};
+
+export default commonConfig;

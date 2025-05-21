@@ -1,0 +1,63 @@
+name: Visual Regression Tests
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
+  NODE_VERSION: "20"
+
+jobs:
+  visual-tests:
+    name: Visual Regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: |
+          yarn install --frozen-lockfile
+          npx percy exec -- echo "Percy initialized"
+
+      - name: Start development server
+        run: yarn dev &
+        background: true
+
+      - name: Wait for server
+        uses: nick-invision/retry@v2
+        with:
+          timeout-minutes: 3
+          command: curl --silent --fail http://localhost:5173
+
+      - name: Run visual tests
+        run: |
+          npx percy exec -- cypress run --browser chrome --headless
+        env:
+          PERCY_PARALLEL_NONCE: ${{ github.run_id }}
+
+  visual-review:
+    name: Review
+    needs: visual-tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Comment PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "🔍 Visual changes detected! Review at: https://percy.io/${{ github.repository }}"
+            })

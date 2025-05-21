@@ -1,0 +1,79 @@
+import { defineConfig } from 'vite';
+<%_ if (framework === 'React') { _%>
+import react from '@vitejs/plugin-react';
+<%_ } else { _%>
+import vue from '@vitejs/plugin-vue';
+import vueDevTools from 'vite-plugin-vue-devtools'
+<%_ } _%>
+<%_ if(needJsx) { _%>
+import vueJsx from '@vitejs/plugin-vue-jsx'
+<%_ } _%>
+import path from 'path';
+// ESM环境获取__dirname
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export default defineConfig({
+  server: {
+    host: '0.0.0.0', 
+    port: process.env.PORT || 5173,  
+    open: false,       
+    strictPort: false, 
+  },
+  preview: {
+    port: process.env.PREVIEW_PORT || 4173
+  },
+  plugins: [
+    <%_ if (framework === 'React') { _%>
+    react(),
+    <%_ } else { _%>
+    vue({
+      reactivityTransform: true // 启用响应性语法糖
+    }),
+    <%_ if(needJsx) { _%>
+    vueJsx(),
+    <%_ } _%>
+    vueDevTools(),
+    <%_ } _%>
+  ],
+  css: {
+    preprocessorOptions: {
+      <%_ if (cssPreprocessor === 'Sass/SCSS') { _%>
+      scss: {
+       additionalData: `
+          @use "@/styles" as *;
+          @use "sass:meta";
+        `,
+        charset: false
+      }
+      <%_ } else if (cssPreprocessor === 'Less') { _%>
+      less: {
+        globalVars: {
+          hack: `true; @import "@/styles/_variables.less";`
+        }
+      }
+      <%_ } else if (cssPreprocessor === 'Stylus') { _%>
+      stylus: {
+        imports: [path.resolve(__dirname, 'src/styles/_variables.styl')]
+      }
+      <%_ } _%>
+    },
+    postcss: {
+      plugins: [
+
+      ]
+    },
+  },
+  build: {
+    cssCodeSplit: true,
+    minify: 'esbuild',
+    rollupOptions: {
+      plugins: []
+    }
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src')
+    }
+  }
+});

@@ -7,7 +7,7 @@
   },
   "scripts": {
     "build": "rollup -c",
-    "prepublishOnly": "node ./scripts/copy-templates.js pnpm build"
+    "prepublishOnly": "rm -rf ./dist rm -rf templates  ./scripts/copy-templates.js pnpm build"
   },
   "main": "dist/index.js",
   "files": [

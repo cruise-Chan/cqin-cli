@@ -1,0 +1,58 @@
+
+import { createApp } from 'vue';
+import type { App as AppType } from 'vue';
+import App from './App.vue';
+<%_ if (needRouter) { _%>
+import router from './routes/router';
+<%_ } _%>
+<%_ if (uiFramework === 'Element Plus') { _%>
+import * as ElementPlus from 'element-plus';
+import { House, InfoFilled, UserFilled } from '@element-plus/icons-vue'
+import 'element-plus/dist/index.css';
+<%_ } else if (uiFramework === 'Ant Design Vue') { _%>
+import Antd from 'ant-design-vue'
+import 'ant-design-vue/dist/antd.css'
+<%_ } else if (uiFramework === 'Element UI') { _%>
+import ElementUI from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';
+<%_ } _%>
+<%_ if (needStore) { _%>
+<%_ if (version === '3.x') { _%>
+import { createPinia } from 'pinia';
+<%_ } else { _%>
+import store from './store';
+<%_ } _%>
+<%_ } _%>
+import 'modern-normalize/modern-normalize.css';
+
+const app: AppType = createApp(App);
+
+
+<%_ if (uiFramework === 'Element Plus') { _%>
+const components = [House, InfoFilled, UserFilled]
+components.forEach(component => {
+  app.component(component.name, component)
+})
+<%_ } _%>
+
+<%_ if (needRouter) { _%>
+app.use(router);
+<%_ } _%>
+<%_ if (uiFramework === 'Element Plus') { _%>
+app.use(ElementPlus);
+<%_ } _%>
+<%_ if (uiFramework === 'Ant Design Vue') { _%>
+app.use(Antd);
+<%_ } _%>
+<%_ if (uiFramework === 'Element UI') { _%>
+app.use(ElementUI);
+<%_ } _%>
+<%_ if (needStore) { _%>
+<%_ if (version === '3.x') { _%>
+app.use(createPinia());
+<%_ } else { _%>
+app.use(store);
+<%_ } _%>
+<%_ } _%>
+
+app.mount('#app');

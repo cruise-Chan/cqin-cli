@@ -10,7 +10,7 @@ const __dirname = dirname(__filename);
 const sourceTemplatesDir = join(__dirname, '../../templates');
 
 // 目标路径（cli 包内的临时目录）
-const destTemplatesDir = join(__dirname, '../templates');
+const destTemplatesDir = join(__dirname, '../.templates');
 
 async function copyTemplates() {
   try {
