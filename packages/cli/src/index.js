@@ -7,8 +7,15 @@ import { execSync } from 'child_process'
 import path from "node:path";
 import fs from "fs-extra";
 
+import { fileURLToPath } from "url";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// 从 package.json 获取版本号
+const packageJsonPath = path.join(__dirname, '../package.json');
+const packageJson = fs.readJsonSync(packageJsonPath);
+const version = packageJson.version;
 program
-    .version("1.0.14", "-v, --version")
+    .version(version, "-v, --version")
 
 program
     .command('create')
