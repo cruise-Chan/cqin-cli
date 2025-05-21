@@ -8,7 +8,7 @@ import path from "node:path";
 import fs from "fs-extra";
 
 program
-    .version("1.0.10", "-v, --version")
+    .version("1.0.14", "-v, --version")
 
 program
     .command('create')
