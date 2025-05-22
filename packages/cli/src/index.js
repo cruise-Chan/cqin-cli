@@ -25,6 +25,25 @@ program
 let hasWebpackConfigPathDev;
 let hasWebpackConfigPathProd;
 // 统一处理构建命令
+
+program
+    .command('start')
+    .description('启动开发服务器')
+    .allowUnknownOption()
+    .action(() => {
+        const args = process.argv.slice(process.argv.indexOf('start') + 1);
+        runBuildCommand('', 'start', args);
+    });
+
+program
+    .command('build')
+    .description('构建生产包')
+    .allowUnknownOption()
+    .action(() => {
+        const args = process.argv.slice(process.argv.indexOf('build') + 1);
+        runBuildCommand('build', 'build', args);
+    });
+
 function runBuildCommand(command, mode, userArgs = []) {
     try {
         const buildTool = detectBuildTool();
@@ -53,26 +72,6 @@ function runBuildCommand(command, mode, userArgs = []) {
     }
 }
 
-program
-    .command('start')
-    .description('启动开发服务器')
-    .allowUnknownOption()
-    .action(() => {
-        const args = process.argv.slice(process.argv.indexOf('start') + 1);
-        runBuildCommand('', 'start', args);
-    });
-
-program
-    .command('build')
-    .description('构建生产包')
-    .allowUnknownOption()
-    .action(() => {
-        const args = process.argv.slice(process.argv.indexOf('build') + 1);
-        runBuildCommand('build', 'build', args);
-    });
-
-program.parse(process.argv);
-
 
 // 检测项目使用的构建工具（Vite 或 Webpack）
 function detectBuildTool(projectPath = process.cwd()) {
@@ -96,3 +95,5 @@ function detectBuildTool(projectPath = process.cwd()) {
         throw new Error('未检测到 Vite 或 Webpack 配置文件，请确保项目已初始化');
     }
 }
+
+program.parse(process.argv);

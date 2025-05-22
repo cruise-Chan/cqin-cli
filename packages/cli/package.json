@@ -6,6 +6,7 @@
     "cqin": "dist/index.js"
   },
   "scripts": {
+    "start": "pnpm run prepublishOnly",
     "build": "rollup -c",
     "prepublishOnly": "npm run clean && node ./scripts/copy-templates.js && pnpm build",
     "clean": "rimraf dist"

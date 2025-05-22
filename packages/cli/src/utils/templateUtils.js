@@ -24,8 +24,8 @@ export function getDependencies(answers) {
     }
     if (answers.builder === "Webpack") {
         deps["terser-webpack-plugin"] = '^5.3.9',
-            deps["mini-css-extract-plugin"] = '^2.7.6',
-            deps["css-minimizer-webpack-plugin"] = '^5.0.1'
+        deps["mini-css-extract-plugin"] = '^2.7.6',
+        deps["css-minimizer-webpack-plugin"] = '^5.0.1'
     }
     // 添加状态管理依赖
     if (answers.needStore) {
