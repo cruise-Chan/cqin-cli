@@ -14,12 +14,29 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const baseUrl = 'http://localhost:3000';  // 后端服务器地址
+
 export default defineConfig({
   server: {
     host: '0.0.0.0', 
     port: process.env.PORT || 5173,  
     open: false,       
     strictPort: false, 
+    proxy: {
+      // 代理配置示例
+      '/api': {
+        target: baseUrl, 
+        changeOrigin: true, // 改变请求头中的 origin
+        // rewrite: (path) => path.replace(/^\/api/, ''),    // 路径重写,如果不是直接访问后端服务器而是nginx，怎么在nginx中配置rewrite
+        secure: false, // 如果是 https 接口，需要配置这个参数
+        // ws: true, // 代理 websockets
+      },
+      // 多个代理配置示例
+      '/socket.io': {
+        target: 'ws://localhost:3000',
+        ws: true,
+      },
+    },
   },
   preview: {
     port: process.env.PREVIEW_PORT || 4173

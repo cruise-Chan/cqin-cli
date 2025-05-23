@@ -420,6 +420,10 @@ export async function initCommand(projectName) {
             path.join(templatesPath, `./common/constants.${configExt}`),
             path.join(commonDir, `constants.${configExt}`)
         );
+        fs.copySync(
+            path.join(templatesPath, `./common/request.${configExt}`),
+            path.join(commonDir, `request.${configExt}`)
+        );
 
         // 生成全局变量文件
         if (answers.cssPreprocessor !== 'CSS') {

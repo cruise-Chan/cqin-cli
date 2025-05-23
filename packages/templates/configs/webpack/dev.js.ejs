@@ -5,6 +5,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import { merge } from 'webpack-merge';
 import commonConfig from './webpack.common.js';
 
+const baseUrl = 'http://localhost:3000';  // 后端服务器地址
+
 // 开发环境配置
 const devConfig = {
   mode: 'development',
@@ -18,6 +20,21 @@ const devConfig = {
     port: 9000,
     open: true,
     historyApiFallback: true,
+    proxy: {
+      // 代理配置示例
+      '/api': {
+        target: baseUrl, 
+        changeOrigin: true,
+        // pathRewrite: { '^/api': '' },  // 路径重写,如果不是直接访问后端服务器而是nginx，怎么在nginx中配置rewrite
+        secure: false,
+        // ws: true, // 代理 WebSocket
+      },
+      // 多个代理示例
+      '/socket.io': {
+        target: 'ws://localhost:3000',
+        ws: true,
+      },
+    },
   },
   optimization: {
     minimize: false,

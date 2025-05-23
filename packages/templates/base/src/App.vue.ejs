@@ -6,6 +6,7 @@
 </template>
 
 <script <% if (language === 'TypeScript') { %>lang="ts"<% } %>>
+import request  from '@/common/request'
 <% if (language === 'TypeScript') { %>
 export default {
   name: 'App',
@@ -24,6 +25,25 @@ export default {
   }
 }
 <% } %>
+request.use('request', {
+  onFulfilled: (config) => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  }
+})
+// 添加响应拦截器（处理数据格式）
+request.use('response', {
+  onFulfilled: async (response) => {
+    const data = await response.json()
+    if (data.code !== 200) {
+      throw new Error(data.message)
+    }
+    return data
+  }
+})
 </script>
 
 <style <% if (cssPreprocessor !== 'CSS') { %>lang="<%= styleLang %>"<% } %>>
