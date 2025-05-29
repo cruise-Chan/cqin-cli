@@ -5,7 +5,7 @@ import path from "node:path";
 export function getDependencies(answers) {
     const deps = {};
     if (answers.framework === "React") {
-        deps.react = answers.version === "18.x" ? "^18.2.0" : "^17.0.2";
+        deps.react = answers.version === "18.x" ? "^18.2.0" : answers.version === "19.x" ? "^19.1.0" : "^17.0.2";
         deps["react-dom"] = deps.react;
     } else {
         deps.vue = answers.version === "3.x" ? "^3.3.4" : "^2.7.14";
@@ -60,9 +60,9 @@ export function getDevDependencies(answers) {
     devDeps["postcss-load-config"] = "^6.0.1";
     devDeps["cssnano"] = "^7.0.6";
     if (answers.builder === "Vite") {
-        devDeps.vite = "^4.4.5";
+        devDeps.vite = "^6.3.5";
         if (answers.framework === "React")
-            devDeps["@vitejs/plugin-react"] = "^4.0.3";
+            devDeps["@vitejs/plugin-react"] = "^4.5.0";
         if (answers.framework === "Vue") {
             devDeps["@vitejs/plugin-vue"] =
                 answers.version === "3.x" ? "^4.2.3" : "^2.3.4";
@@ -104,6 +104,10 @@ export function getDevDependencies(answers) {
     }
     if (answers.uiFramework === 'Ant Design') {
         devDeps["antd"] = "^5.24.9";
+    }
+    if (answers.uiFramework === 'Ant Design Mobile') {
+        devDeps["antd-mobile"] = "^5.39.0";
+        devDeps["antd-mobile-icons"] = "^0.3.0";
     }
     if (answers.uiFramework === 'Ant Design Vue' && answers.version === '3.x') {
         devDeps["ant-design-vue"] = "4.x";

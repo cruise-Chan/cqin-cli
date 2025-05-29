@@ -52,7 +52,7 @@ export async function initCommand(projectName) {
                 name: "version",
                 message: "版本:",
                 choices: (prev) =>
-                    prev.framework === "Vue" ? ["3.x", "2.x"] : ["18.x", "17.x"],
+                    prev.framework === "Vue" ? ["3.x", "2.x"] : ["19.x", "18.x", "17.x"],
             },
             {
                 type: "list",
@@ -70,7 +70,13 @@ export async function initCommand(projectName) {
                 message: "选择UI框架:",
                 choices: (prev) => {
                     if (prev.framework === "React") {
-                        return ["Ant Design", "None"]
+                        return [{
+                            name:"Ant Design",
+                            description: '(Ant Design 是一个 React 组件库，提供了丰富的 UI 组件和工具。)'
+                        }, {
+                            name: "Ant Design Mobile",
+                            description: '(Ant Design Mobile 是一个 React 移动端组件库，提供了丰富的移动端 UI 组件和工具。)'
+                        }, "None"]
                     } else {
                         if (prev.version === "3.x") {
                             return ["Ant Design Vue", "Element Plus", "None"]
@@ -409,7 +415,8 @@ export async function initCommand(projectName) {
                 projectName,
                 framework: answers.framework,
                 builder: answers.builder,
-                ext: answers.language === "TypeScript" ? "ts" : "js",
+                ext: mainExt,
+                ...answers,
             }
         );
 
@@ -802,36 +809,90 @@ export async function initCommand(projectName) {
 
         // 在项目生成完成后执行
         if (answers.needLint) {
-            // 初始化 Git 仓库（Husky 的前置条件）
-            execSync("git init", {
-                cwd: targetPath,
-                stdio: "inherit",
-                shell: process.platform === "win32" ? "cmd.exe" : "/bin/bash",
-            });
-
-            // 生成 .gitignore 文件
-            generateGitIgnore(targetPath, answers);
-
-            // 新版 Husky 初始化流程
-            execSync("npx husky init", {
-                cwd: targetPath,
-                stdio: "inherit",
-                shell: true,
-            });
-
-            // 直接写入 pre-commit 钩子（兼容所有平台）
-            const hookContent =
-                '#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"\n\nnpx lint-staged';
-            const preCommitPath = path.join(targetPath, ".husky/pre-commit");
-            fs.writeFileSync(preCommitPath, hookContent);
-            fs.chmodSync(preCommitPath, 0o755); // 设置可执行权限
-
-            // 确保 package.json 配置正确
-            const pkgPath = path.join(targetPath, "package.json");
-            const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
-            pkg.scripts.prepare = "husky";
-            fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+            // 增强版 Git 初始化（全环境兼容）
+            const initGitRepo = (targetPath) => {
+                const isWindows = process.platform === 'win32';
+                const shellConfig = {
+                    cwd: targetPath,
+                    stdio: 'inherit',
+                    windowsHide: true,
+                    env: {
+                        ...process.env,
+                        // 强制 UTF-8 环境
+                        LC_ALL: 'C.UTF-8',
+                        LANG: 'C.UTF-8',
+                        GIT_CONFIG_PARAMETERS: "'core.quotepath=false'"
+                    }
+                };
+        
+                try {
+                    // 跨平台 Shell 策略
+                    if (isWindows) {
+                        // Windows 专用解决方案
+                        execSync(
+                            `powershell -NoProfile -ExecutionPolicy Bypass -Command `
+                            + `"$env:LC_ALL='C.UTF-8'; git init | Out-String -Width 2147483647"`,
+                            { ...shellConfig, shell: 'cmd.exe' }
+                        );
+                    } else {
+                        // Unix-like 系统解决方案
+                        execSync('git init', {
+                            ...shellConfig,
+                            shell: '/bin/bash',
+                            env: { ...shellConfig.env, LC_CTYPE: 'UTF-8' }
+                        });
+                    }
+        
+                    // 后续操作...
+                } catch (error) {
+                    // 增强错误诊断
+                    const debugInfo = {
+                        platform: process.platform,
+                        arch: process.arch,
+                        nodeVersion: process.version,
+                        gitVersion: execSync('git --version').toString().trim(),
+                        pathExists: fs.existsSync(targetPath),
+                        path: targetPath,
+                        normalizedPath: path.normalize(targetPath)
+                    };
+                    console.error('Git Init Debug Report:\n' + JSON.stringify(debugInfo, null, 2));
+                    throw new Error(`Git 初始化失败: ${error.message}`);
+                }
+            };
+        
+            // 执行初始化
+            initGitRepo(targetPath);
+        
+            // Husky 初始化（兼容方案）
+            const initHusky = () => {
+                execSync('npx husky init', {
+                    cwd: targetPath,
+                    stdio: 'inherit',
+                    shell: process.platform === 'win32' ? 'powershell.exe' : '/bin/bash',
+                    env: {
+                        ...process.env,
+                        LC_ALL: 'C.UTF-8',  // 保持编码一致性
+                        NODE_OPTIONS: '--no-warnings'  // 抑制警告干扰
+                    }
+                });
+            };
+        
+            // 安全执行 Husky
+            try {
+                initHusky();
+            } catch (huskyError) {
+                console.warn('Husky 初始化失败，尝试备用方案...');
+                // 手动创建必要结构
+                fs.mkdirSync(path.join(targetPath, '.husky'), { recursive: true });
+                // 写入基础 hook
+                fs.writeFileSync(
+                    path.join(targetPath, '.husky/pre-commit'),
+                    '#!/bin/sh\n. "$(dirname "$0")/_/husky.sh"\nnpx lint-staged',
+                    { mode: 0o755 }
+                );
+            }
         }
+        generateGitIgnore(targetPath, answers)
 
         spinner.succeed(`
             项目创建成功！运行以下命令：
@@ -841,7 +902,7 @@ export async function initCommand(projectName) {
           `);
     } catch (err) {
         console.log(err)
-        spinner.fail(`创建失败: ${chalk.red(err.message)}`);
+        spinner.fail(`~创建失败: ${chalk.red(err.message)}`);
         process.exit(1);
     }
 }
