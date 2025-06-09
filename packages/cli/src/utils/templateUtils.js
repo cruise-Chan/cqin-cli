@@ -252,9 +252,16 @@ export function addLintDependencies(pkg, answers) {
         // Prettier
         prettier: "^3.2.5",
         // Stylelint
-        stylelint: "^14.16.1",
+        stylelint: "^16.20.0",
         "stylelint-config-standard": "^34.0.0",
         "stylelint-config-prettier": "^9.0.5",
+        ...(answers.cssPreprocessor === "Sass/SCSS" && {
+            "stylelint-config-standard-scss": "^15.0.1",
+            "postcss-less": "^6.0.0"
+        }),
+        ...(answers.cssPreprocessor === "Less" && {
+            "stylelint-config-recommended-less": "^3.0.1",
+        }),
         // Husky
         husky: "^9.0.11",
         "lint-staged": "^15.2.2",
