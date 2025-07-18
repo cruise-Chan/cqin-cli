@@ -1,0 +1,45 @@
+name: E2E Tests
+on:
+  push:
+    branches: [main]
+  pull_request: {}
+
+env:
+  CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+  NPM_CONFIG_CACHE: ~/.npm
+
+jobs:
+  tests:
+    name: Cypress Tests
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        node-version: [20.x]
+        browser: [chrome, firefox]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Verify Cypress
+        run: npx cypress verify
+
+      - name: Run tests (${{ matrix.browser }})
+        uses: cypress-io/github-action@v6
+        with:
+          browser: ${{ matrix.browser }}
+          headless: true
+          record: true
+          parallel: true
+          group: "Matrix Tests"
+          config-file: cypress.config.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

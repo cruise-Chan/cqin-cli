@@ -1,0 +1,97 @@
+import { defineConfig } from 'vite';
+<%_ if (framework === 'React') { _%>
+import react from '@vitejs/plugin-react';
+<%_ } else { _%>
+import vue from '@vitejs/plugin-vue';
+import vueDevTools from 'vite-plugin-vue-devtools'
+<%_ } _%>
+<%_ if(needJsx) { _%>
+import vueJsx from '@vitejs/plugin-vue-jsx'
+<%_ } _%>
+  
+import path from 'path';
+// ESM环境获取__dirname
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const baseUrl = 'http://localhost:3000';  // 后端服务器地址
+
+export default defineConfig({
+  server: {
+    host: '0.0.0.0', 
+    port: process.env.PORT || 5173,  
+    open: false,       
+    strictPort: false, 
+    proxy: {
+      // 代理配置示例
+      '/api': {
+        target: baseUrl, 
+        changeOrigin: true, // 改变请求头中的 origin
+        // rewrite: (path) => path.replace(/^\/api/, ''),    // 路径重写,如果不是直接访问后端服务器而是nginx，怎么在nginx中配置rewrite
+        secure: false, // 如果是 https 接口，需要配置这个参数
+        // ws: true, // 代理 websockets
+      },
+      // 多个代理配置示例
+      '/socket.io': {
+        target: 'ws://localhost:3000',
+        ws: true,
+      },
+    },
+  },
+  preview: {
+    port: process.env.PREVIEW_PORT || 4173
+  },
+  plugins: [
+    <%_ if (framework === 'React') { _%>
+    react(),
+    <%_ } else { _%>
+    vue({
+      reactivityTransform: true // 启用响应性语法糖
+    }),
+    <%_ if(needJsx) { _%>
+    vueJsx(),
+    <%_ } _%>
+    vueDevTools(),
+    <%_ } _%>
+  ],
+  css: {
+    preprocessorOptions: {
+      <%_ if (cssPreprocessor === 'Sass/SCSS') { _%>
+      scss: {
+       additionalData: `
+          @use "@/styles" as *;
+          @use "sass:meta";
+        `,
+        charset: false
+      }
+      <%_ } else if (cssPreprocessor === 'Less') { _%>
+      less: {
+        globalVars: {
+          hack: `true; @import "@/styles/_variables.less";`
+        }
+      }
+      <%_ } else if (cssPreprocessor === 'Stylus') { _%>
+      stylus: {
+        imports: [path.resolve(__dirname, 'src/styles/_variables.styl')]
+      }
+      <%_ } _%>
+    },
+    postcss: {
+      plugins: [
+
+      ]
+    },
+  },
+  build: {
+    cssCodeSplit: true,
+    minify: 'esbuild',
+    rollupOptions: {
+      plugins: []
+    }
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src')
+    }
+  }
+});

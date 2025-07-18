@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <!-- iOS特定设置 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title><%= projectName %></title>
+    <style>
+        /* 基础重置 */
+        /* 禁用默认触摸行为 */
+        html {
+            touch-action: manipulation;
+            /* 允许单指滚动但禁用双击缩放 */
+        }
+
+        /* 全局禁止文本选择（可选） */
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden;
+        }
+
+        /* 安全区域适配 */
+        .container {
+            width: 100%;
+            height: 100%;
+            padding:
+                env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+    <!-- 页面内容 -->
+    <% if (framework==='React' ) { %>
+        <div id="root"></div>
+    <% } else { %>
+        <div id="app"></div>
+    <% } %>
+    </div>
+
+    <script>
+        // 环境检测
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isAndroid = /Android/.test(navigator.userAgent);
+        const isMobile = /Mobi/.test(navigator.userAgent);
+
+
+        // 进入全屏
+        function enterFullscreen() {
+            const element = document.documentElement;
+
+            if (element.requestFullscreen) {
+                element.requestFullscreen();
+            } else if (element.webkitRequestFullscreen) { // Safari
+                element.webkitRequestFullscreen();
+            } else if (element.mozRequestFullScreen) { // Firefox
+                element.mozRequestFullScreen();
+            }
+
+            // iOS特殊处理
+            if (isIOS) {
+                iosTip.style.display = 'block';
+                setTimeout(() => {
+                    iosTip.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // 初始化
+        function init() {
+            enterFullscreen();
+        }
+
+        // 绑定事件
+        document.addEventListener('DOMContentLoaded', init);
+
+        // 横屏检测
+        window.addEventListener('orientationchange', () => {
+            if (window.orientation === 90 || window.orientation === -90) {
+                console.log('横屏模式');
+            } else {
+                console.log('竖屏模式');
+            }
+        });
+
+        // 方案一：阻止双击事件
+        let lastTap = 0;
+        document.addEventListener('touchend', function (event) {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 500 && tapLength > 0) { // 双击判定
+                event.preventDefault();
+            }
+            lastTap = currentTime;
+        });
+
+        // 方案二：禁用手势缩放（增强兼容性）
+        document.documentElement.addEventListener('gesturestart', function (e) {
+            e.preventDefault();
+        });
+
+        // 方案三：阻止默认行为（备用）
+        document.addEventListener('dblclick', function (e) {
+            e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+
+</html>

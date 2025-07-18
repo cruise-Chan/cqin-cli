@@ -1,0 +1,60 @@
+// 通用命令
+Cypress.Commands.add('navigateTo', (path = '/') => {
+  cy.visit(path)
+})
+
+<%_ if (uiFramework.includes('Ant')) { _%>
+// Ant Design 专用命令
+Cypress.Commands.add('antSelect', (selector, optionText) => {
+  cy.get(selector).click()
+  cy.contains('.ant-select-item-option-content', optionText).click()
+})
+<%_ } _%>
+
+<%_ if (uiFramework.includes('Element')) { _%>
+// Element UI 专用命令
+Cypress.Commands.add('elSelect', (selector, optionText) => {
+  cy.get(selector).click()
+  cy.contains('.el-select-dropdown__item', optionText).click()
+})
+<%_ } _%>
+
+// 智能等待改进版 (支持所有查询命令)
+Cypress.Commands.overwriteQuery('get', function (originalFn, selector, options) {
+  const getTimeout = (sel) => {
+    if (sel.includes('ant-')) return 10000
+    if (sel.startsWith('.el-')) return 8000
+    return 5000
+  }
+
+  return () => {
+    const timeout = options?.timeout || getTimeout(selector)
+    return originalFn(selector, { ...options, timeout })
+  }
+})
+
+// 兼容其他查询命令
+Cypress.Commands.overwriteQuery('find', function (originalFn, selector, options) {
+  return () => {
+    return originalFn(selector, { ...options, timeout: 8000 })
+  }
+})
+
+// 文件上传增强
+Cypress.Commands.add('uploadFile', (selector, fileName) => {
+  cy.fixture(fileName).then(fileContent => {
+    cy.get(selector).attachFile({
+      fileContent: fileContent.toString(),
+      fileName: fileName,
+      mimeType: 'text/plain'
+    })
+  })
+})
+
+// 数据驱动测试支持
+Cypress.Commands.add('loadDataset', (fixtureName) => {
+  return cy.fixture(fixtureName).then(data => {
+    Cypress.env('currentDataset', data)
+    return data
+  })
+})

@@ -1,0 +1,55 @@
+{
+  "name": "@cqin/cli",
+  "version": "1.1.1",
+  "type": "module",
+  "bin": {
+    "cqin": "dist/index.js"
+  },
+  "scripts": {
+    "start": "pnpm run prepublishOnly",
+    "build": "rollup -c",
+    "prepublishOnly": "npm run clean && node ./scripts/copy-templates.js && pnpm build",
+    "clean": "rimraf dist"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    ".templates/**/*",
+    "README.md"
+  ],
+  "keywords": [
+    "@cqin/cli",
+    "cqin",
+    "cli",
+    "testing",
+    "generator",
+    "javascript",
+    "frontend",
+    "webpack",
+    "vite"
+  ],
+  "author": "Cruisechen",
+  "license": "MIT",
+  "description": "A CLI tool for managing your project",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "ejs": "^3.1.10",
+    "fs-extra": "^11.3.0",
+    "husky": "^9.1.7",
+    "inquirer": "^12.5.2",
+    "ora": "^8.2.0",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-replace": "^6.0.2",
+    "@rollup/plugin-terser": "^0.4.4",
+    "rimraf": "^6.0.1",
+    "rollup": "^4.41.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "gitHead": "d597eee5d6c5b6de5772bcbdc9d40e6b914a13cf"
+}

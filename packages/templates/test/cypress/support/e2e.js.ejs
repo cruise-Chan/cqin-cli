@@ -1,0 +1,22 @@
+import './commands'
+// 动态配置文件拦截
+
+// 全局配置
+beforeEach(() => {
+  // 重置应用状态
+  cy.window().then(win => {
+    win.localStorage.clear()
+    win.sessionStorage.clear()
+  })
+  
+  // 智能拦截配置
+  cy.intercept('GET', 'api.config', (req) => {
+    // 开发环境使用 fixture 数据
+    if (Cypress.env('env') === 'development') {
+      req.reply({ fixture: 'config.json' })
+    } else {
+      // 生产环境透传真实请求
+      req.continue()
+    }
+  }).as('getConfig')
+})

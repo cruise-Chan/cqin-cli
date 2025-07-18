@@ -4,6 +4,8 @@ node_modules/
 # 忽略自动生成的文件
 dist/
 build/
+packages/cli/.templates/
+packages/cli/templates/
 
 # 忽略环境配置文件
 .env
@@ -17,3 +19,4 @@ build/
 # 忽略 IDE 或编辑器生成的文件
 .DS_Store
 *.swp
+
