@@ -18,6 +18,7 @@
 - [常见问题](#常见问题)
 - [贡献指南](#贡献指南)
 - [许可证](#许可证)
+- [联系作者](#联系作者)
 
 ---
 
@@ -55,7 +56,7 @@ npx cqin-cli@latest <project-name>
   Vue 
 
 ? 版本 › 
-❯ 18.x (最新)
+❯ 18.x
   17.x 
 
 ? 需要哪些功能 › - 空格选择/取消 - 
@@ -68,6 +69,7 @@ npx cqin-cli@latest <project-name>
 
 ## 项目结构
 ```bash
+# react 项目为例
 my-app/
 ├── src/
 │   ├── assets/          # 静态资源
@@ -131,37 +133,37 @@ $breakpoints: (
 ### 基础命令
 ```bash
 # 启动开发服务器
-yarn dev
+pnpm start
 
 # 生产环境构建
-yarn build
+pnpm run build
 
 # 预览构建结果
-yarn preview
+pnpm run preview
 ```
 
 ### 代码质量
 ```bash
 # 执行ESLint检查
-yarn lint:js
+pnpm run lint:js
 
 # 修复样式问题
-yarn lint:style
+pnpm run lint:style
 
 # 格式化所有文件
-yarn format
+pnpm run format
 ```
 
 ### 测试相关
 ```bash
 # 运行完整测试
-yarn test:e2e
+pnpm run test:e2e
 
 # 交互式测试开发
-yarn test:e2e:dev
+pnpm run test:e2e:dev
 
 # CI环境测试
-yarn test:e2e:ci
+pnpm run test:e2e:ci
 ```
 
 ## 测试指南
@@ -256,5 +258,9 @@ git checkout -b feat/awesome-feature
 4. 发起Pull Request
 
 ## 许可证
-MIT License © 2023 cqin-cli 开发者
+MIT License © 2025 cruise-Chan cqin-cli 开发者
+
 > 更多文档请访问：[项目Wiki](https://github.com/cruise-Chan/cqin-cli/wiki)
+
+## 联系作者
+作者邮箱: 1070951750@qq.com
