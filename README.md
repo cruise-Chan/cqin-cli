@@ -2,7 +2,7 @@
 
 > 一个 monorepo 脚手架，CLI 位于 `packages/cli`，用于快速初始化多包项目结构
 
-[![Forks](https://img.shields.io/github/forks/cruise-Chan/cqin-cli?style=social)](https://github.com/cruise-Chan/cqin-cli/fork)
+[![Forks](https://img.shields.io/github/forks/cruiseqin/cqin-cli?style=social)](https://github.com/cruiseqin/cqin-cli/fork)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 ## 目录
@@ -44,7 +44,7 @@
 ## 快速开始
 ```bash
 # 1. Fork 本仓库
-git clone https://github.com/cruise-Chan/cqin-cli.git
+git clone https://github.com/cruiseqin/cqin-cli.git
 cd cqin-cli
 
 # 2. 安装所有依赖
